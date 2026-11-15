@@ -77,11 +77,6 @@ export const BroomIcon = () => svg([
     <path d="M4.5 19.5l1-1M7 20l1-1M9.5 20.5l1-1" />,
 ]);
 
-export const GearIcon = () => svg([
-    <circle cx="12" cy="12" r="3.2" />,
-    <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.1 5.1l2.1 2.1M16.8 16.8l2.1 2.1M18.9 5.1l-2.1 2.1M7.2 16.8l-2.1 2.1" />,
-]);
-
 // Happy glasses (enabled) — smiling eyes, brand blue->purple->pink gradient.
 export const GlassesHappy = () => (
     <svg viewBox="0 0 128 72" fill="none" stroke="url(#me-glasses-grad)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
