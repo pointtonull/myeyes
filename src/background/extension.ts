@@ -14,8 +14,10 @@ import {PromiseBarrier} from '../utils/promise-barrier';
 import {StateManager} from '../utils/state-manager';
 import {getActiveTab} from '../utils/tabs';
 import {isInTimeIntervalLocal, nextTimeInterval, isNightAtLocation, nextTimeChangeAtLocation, getDuration} from '../utils/time';
-import {defaultThemeLabel, nextDefaultTheme, nextSiteTheme, resolveSiteTheme, siteThemeLabel} from '../utils/named-themes';
-import {SITE_ENABLE_LABELS, getSiteEnableMode, isSiteDarkened, toggleSiteEnable} from '../utils/site-enable';
+import {nextDefaultTheme, nextSiteTheme, resolveSiteTheme} from '../utils/named-themes';
+import type {OSDMessage} from '../utils/osd-message';
+import {defaultThemeOSD, extensionToggleOSD, pdfToggleOSD, siteEnableOSD, siteThemeOSD} from '../utils/osd-message';
+import {getSiteEnableMode, isSiteDarkened, toggleSiteEnable} from '../utils/site-enable';
 import {isURLInList, getURLHostOrProtocol, isURLEnabled, isPDF} from '../utils/url';
 
 import ConfigManager from './config-manager';
@@ -310,7 +312,7 @@ export class Extension {
             case 'toggle': {
                 logInfo('Toggle command entered');
                 const enabled = !Extension.isExtensionSwitchedOn();
-                await Extension.confirmCommand(enabled ? 'MyEyes on' : 'MyEyes off', 'all sites');
+                await Extension.confirmCommand(extensionToggleOSD(enabled));
                 Extension.changeSettings({
                     enabled,
                     automation: {...UserStorage.settings.automation, ...{enabled: false}},
@@ -349,7 +351,7 @@ export class Extension {
                 const pdf = async () => isPDF(frameURL || await TabManager.getActiveTabURL());
                 if (((__CHROMIUM_MV2__ || __CHROMIUM_MV3__) && await scriptPDF(tabId!, frameId!)) || await pdf()) {
                     const enableForPDF = !UserStorage.settings.enableForPDF;
-                    await Extension.confirmCommand(enableForPDF ? 'Enabled' : 'Disabled', 'all PDFs');
+                    await Extension.confirmCommand(pdfToggleOSD(enableForPDF));
                     Extension.changeSettings({enableForPDF});
                 } else {
                     // MyEyes!: flip whether this page is darkened, preferring
@@ -363,8 +365,7 @@ export class Extension {
                     const next = {...UserStorage.settings, ...patch};
                     const mode = getSiteEnableMode(next, tab.url);
                     const darkened = isSiteDarkened(next, tab.url, tab);
-                    const detail = mode === 'auto' ? `${host} · ${darkened ? 'darkening' : 'page is already dark'}` : host;
-                    await Extension.confirmCommand(SITE_ENABLE_LABELS[mode], detail);
+                    await Extension.confirmCommand(siteEnableOSD(mode, host, darkened));
                     Extension.changeSettings(patch, true);
                 }
                 break;
@@ -385,7 +386,7 @@ export class Extension {
                 if (url) {
                     const host = getURLHostOrProtocol(url);
                     const patch = nextSiteTheme(UserStorage.settings, url, host);
-                    await Extension.confirmCommand(siteThemeLabel({...UserStorage.settings, ...patch}, url), host);
+                    await Extension.confirmCommand(siteThemeOSD({...UserStorage.settings, ...patch}, url, host));
                     Extension.changeSettings(patch, true);
                 }
                 break;
@@ -393,7 +394,7 @@ export class Extension {
             case 'cycleDefaultTheme': {
                 logInfo('Cycle default theme command entered');
                 const patch = nextDefaultTheme(UserStorage.settings);
-                await Extension.confirmCommand(defaultThemeLabel({...UserStorage.settings, ...patch}), 'default for new sites');
+                await Extension.confirmCommand(defaultThemeOSD({...UserStorage.settings, ...patch}));
                 Extension.changeSettings(patch);
                 break;
             }
@@ -403,14 +404,15 @@ export class Extension {
     /**
      * MyEyes!: confirm a keyboard command right away, before the page
      * re-renders (the change may be subtle, or a heavy page slow to repaint):
-     * a small on-screen note in the active tab, else a brief toolbar badge.
+     * a small on-screen note in the active tab (copy: utils/osd-message),
+     * else a brief toolbar badge.
      */
-    private static async confirmCommand(title: string, detail?: string) {
+    private static async confirmCommand(message: OSDMessage) {
         const tab = await getActiveTab();
         if (!tab?.id) {
             return;
         }
-        if (!TabManager.showOSD(tab.id, {title, detail})) {
+        if (!TabManager.showOSD(tab.id, message)) {
             IconManager.flashBadge(tab.id, '✓');
         }
     }

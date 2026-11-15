@@ -104,6 +104,23 @@
     // the glasses carry their own colours: just let them shine
     .me-pill__icon img { filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.55)); }
 }
+// Auto's sparkles fill their square canvas: fit, don't crop like the glasses.
+// (Spelled out: two `&`s in one nested selector repeat the .preview parent.)
+.me-pill--auto .me-pill__icon img { object-fit: contain; }
+
+// Auto (every site's default) keeps a quiet glass outline even when another
+// segment is lit (popup-mockup.png v3)
+.me-pill--auto:not(.me-pill--active) {
+    .me-gb();
+    --gb-surface-top: rgba(70, 62, 140, 0.35);
+    --gb-surface-bottom: rgba(54, 48, 116, 0.35);
+    --gb-ring-a: rgba(150, 132, 240, 0.85);
+    --gb-ring-b: rgba(112, 94, 210, 0.8);
+    --gb-ring-c: rgba(128, 110, 225, 0.85);
+    color: #f1edff;
+
+    .me-pill__icon img { opacity: 1; }
+}
 // the "off" segment is lit in neutral silver, not brand purple
 .me-pill--disabled.me-pill--active {
     --gb-surface-top: rgba(92, 88, 140, 0.55);
@@ -299,8 +316,9 @@
 
     .me-ai__icon img { display: block; height: 1.35rem; width: 1.35rem; }
 }
-.me-ai__btn--enhance { .me-gb-primary(); }
-.me-ai__btn--clean { .me-gb-bright(); }
+// both filled purple (popup-mockup.png v3)
+.me-ai__btn--enhance,
+.me-ai__btn--clean { .me-gb-primary(); }
 
 .me-footer {
     padding-top: 0.85rem;

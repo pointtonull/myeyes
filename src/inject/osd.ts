@@ -2,7 +2,8 @@
  * MyEyes! on-screen confirmation for keyboard commands, after
  * brand/reference/osd-mockup.png: a neon-glass pill in the top-right corner
  * with the mascot, a divider, "[icon] Filter+ · example.com" over a muted
- * second line, and a ring that drains until the pill fades out by itself.
+ * note, and a ring that drains until the pill fades out by itself. What it
+ * says comes from the background (utils/osd-message); this only draws it.
  *
  * Non-intrusive by construction: click-through (pointer-events: none), no
  * focus change, one pill reused for repeated presses, no motion when the user
@@ -16,12 +17,17 @@
  * frame while visible because the engine may switch while it is on screen.
  */
 
+import type {OSDIcon, OSDMessage} from '../utils/osd-message';
+
 const VISIBLE_MS = 1600;
 const FADE_MS = 220;
 
 const NS = 'http://www.w3.org/2000/svg';
 const RING_R = 9;
 const RING_C = 2 * Math.PI * RING_R;
+// with reduced motion the ring doesn't drain: it rests as the mockup's
+// three-quarter arc
+const RING_REST = RING_C * 0.28;
 
 let host: HTMLElement | null = null;
 let pill: HTMLElement | null = null;
@@ -120,52 +126,23 @@ const ICONS: Record<string, Shape[]> = {
         ...coloredFrames('#a5a0bd', 0.65),
         ['path', {...STROKE, 'd': 'm12 28 10 5-10 5m40-10-10 5 10 5', 'stroke': '#d5cde2', 'stroke-width': 2.8}],
     ],
+    // Auto = sparkles (popup-mockup.png v3), same as the popup's mode-auto.svg
     'auto': [
-        ...coloredFrames(GLASSES).slice(0, 1),
-        coloredFrames(GLASSES)[2],
-        ['path', {...STROKE, 'd': 'M12 30q5 -8 10 0', 'stroke': '#b5f8ff', 'stroke-width': 2.7}],
-        coloredFrames('#a5a0bd', 0.65)[1],
-        ['path', {...STROKE, 'd': 'm52 28-10 5 10 5', 'stroke': '#d5cde2', 'stroke-width': 2.8}],
+        ['path', {d: 'm26 10 5 16 16 5-16 5-5 16-5-16-16-5 16-5z', fill: '#e2d4ff'}],
+        ['path', {d: 'm49 5 3 7 7 3-7 3-3 7-3-7-7-3 7-3z', fill: '#cdb8ff'}],
+        ['path', {d: 'm50 38 2 5 5 2-5 2-2 5-2-5-5-2 5-2z', fill: '#bfa8ff'}],
     ],
 };
 
-/** Which kit icon goes with a confirmation title (the command's new state). */
-export function osdIconFor(title: string): string {
-    const key = title.trim().toLowerCase();
-    if (key === 'dynamic') {
-        return 'dynamic';
-    }
-    if (key.startsWith('filter')) {
-        return 'filter';
-    }
-    if (key === 'custom' || key === 'enabled' || key === 'disabled' || key === 'auto') {
-        return key;
-    }
-    return 'theme'; // a saved theme's name
-}
-
-/**
- * Split the detail into what follows the title on line one (a host, like
- * "example.com") and the muted second line ("darkening", "all PDFs",
- * "default for new sites"): "example.com · darkening" gives both.
- */
-export function splitOSDDetail(detail?: string): {host: string; note: string} {
-    const parts = (detail || '').split(' · ').map((s) => s.trim()).filter(Boolean);
-    const looksLikeHost = parts.length > 0 && !/\s/.test(parts[0]);
-    return looksLikeHost
-        ? {host: parts[0], note: parts.slice(1).join(' · ')}
-        : {host: '', note: parts.join(' · ')};
-}
-
-function modeIcon(name: string): SVGSVGElement {
-    const icon = svg('0 0 64 64', 20, ICONS[name] || ICONS.theme, [gradient('me-osd-glasses', ['#46e0f5', '#ef55ed'])]);
+function modeIcon(name: OSDIcon): SVGSVGElement {
+    const icon = svg('0 0 64 64', 22, ICONS[name] || ICONS.theme, [gradient('me-osd-glasses', ['#46e0f5', '#ef55ed'])]);
     css(icon, {'filter': 'drop-shadow(0 0 4px rgba(152, 96, 245, 0.45))'});
     return icon;
 }
 
 /** The kit's happy blob (brand/ui-kit/mascot), smiling, with the gold rays. */
 function mascot(): SVGSVGElement {
-    const m = svg('-8 -8 76 74', 58, [
+    const m = svg('-8 -8 76 74', 66, [
         ['path', {...STROKE, 'd': 'M7 13 1 8M14 7 11 -1M23 4V-5', 'stroke': '#ffc94d', 'stroke-width': 3.5}],
         ['ellipse', {cx: 32, cy: 39, rx: 25, ry: 23, fill: 'url(#me-osd-blob)'}],
         ['ellipse', {cx: 17, cy: 53, rx: 10, ry: 7, fill: '#8052dc'}],
@@ -180,23 +157,26 @@ function mascot(): SVGSVGElement {
     // taller than the pill's content: the rays poke above the rim, as in the mockup
     css(m, {
         'filter': 'drop-shadow(0 0 8px rgba(152, 96, 245, 0.6))',
-        'margin': '-16px 0 -8px -4px',
+        'margin': '-18px 0 -10px -6px',
     });
     return m;
 }
 
-/** The ring on the right: drains while the pill is up (stays full if reduced motion). */
+/** The ring on the right: drains while the pill is up (a resting arc if reduced motion). */
 function countdownRing(): SVGSVGElement {
     ringArc = svgEl('circle', {
         'cx': 12, 'cy': 12, 'r': RING_R, 'fill': 'none',
-        'stroke': 'url(#me-osd-ring)', 'stroke-width': 2.6, 'stroke-linecap': 'round',
+        'stroke': 'url(#me-osd-ring)', 'stroke-width': 2.4, 'stroke-linecap': 'round',
         'stroke-dasharray': RING_C.toFixed(2), 'transform': 'rotate(-90 12 12)',
     });
-    const ring = svg('0 0 24 24', 26, [
-        ['circle', {'cx': 12, 'cy': 12, 'r': RING_R, 'fill': 'none', 'stroke': 'rgba(150, 130, 240, 0.28)', 'stroke-width': 2.6}],
+    if (prefersReducedMotion()) {
+        css(ringArc, {'stroke-dashoffset': RING_REST.toFixed(2)});
+    }
+    const ring = svg('0 0 24 24', 30, [
+        ['circle', {'cx': 12, 'cy': 12, 'r': RING_R, 'fill': 'none', 'stroke': 'rgba(150, 130, 240, 0.28)', 'stroke-width': 2.4}],
     ], [gradient('me-osd-ring', ['#e4d8ff', '#9b6cff'])]);
     ring.append(ringArc);
-    css(ring, {'margin-left': '4px', 'filter': 'drop-shadow(0 0 4px rgba(155, 108, 255, 0.5))'});
+    css(ring, {'margin-left': '6px', 'filter': 'drop-shadow(0 0 4px rgba(155, 108, 255, 0.5))'});
     return ring;
 }
 
@@ -219,12 +199,12 @@ function create() {
     css(pill, {
         'display': 'flex',
         'align-items': 'center',
-        'gap': '11px',
+        'gap': '13px',
         'box-sizing': 'border-box',
-        'min-width': '260px',
-        'max-width': '420px',
-        'min-height': '62px',
-        'padding': '7px 14px 7px 14px',
+        'min-width': '300px',
+        'max-width': '460px',
+        'min-height': '72px',
+        'padding': '8px 18px 8px 16px',
         'border-radius': '999px',
         // glass surface inside a gradient rim: lavender-white along the
         // top-left, violet below (two background layers, no pseudo-elements)
@@ -254,7 +234,7 @@ function create() {
         'display': 'block',
         'flex': 'none',
         'width': '1px',
-        'height': '34px',
+        'height': '42px',
         'background': 'linear-gradient(180deg, transparent, rgba(150, 130, 240, 0.7) 20%, rgba(150, 130, 240, 0.7) 80%, transparent)',
     });
 
@@ -263,27 +243,27 @@ function create() {
         'display': 'flex',
         'flex': 'auto',
         'flex-direction': 'column',
-        'gap': '3px',
+        'gap': '4px',
         'min-width': '0',
     });
     const line = document.createElement('div');
-    css(line, {'display': 'flex', 'align-items': 'center', 'gap': '7px', 'min-width': '0'});
+    css(line, {'display': 'flex', 'align-items': 'center', 'gap': '8px', 'min-width': '0'});
     iconSlot = document.createElement('span');
     css(iconSlot, {'display': 'flex', 'flex': 'none'});
     titleEl = document.createElement('span');
-    css(titleEl, {'font-size': '16px', 'font-weight': '700', 'color': '#ffffff', 'flex': 'none'});
+    css(titleEl, {'font-size': '17px', 'font-weight': '700', 'color': '#ffffff', 'flex': 'none'});
     hostEl = document.createElement('span');
     css(hostEl, {
-        'font-size': '16px',
+        'font-size': '17px',
         'font-weight': '600',
-        'color': '#e6dfff',
+        'color': '#e9e3ff',
         'overflow': 'hidden',
         'text-overflow': 'ellipsis',
     });
     line.append(iconSlot, titleEl, hostEl);
     noteEl = document.createElement('div');
     css(noteEl, {
-        'font-size': '12.5px',
+        'font-size': '13.5px',
         'font-weight': '500',
         'color': '#b9a9f2',
         'overflow': 'hidden',
@@ -335,7 +315,7 @@ function stopWatching() {
     }
 }
 
-export function showOSD({title, detail}: {title: string; detail?: string}): void {
+export function showOSD({title, host: site, note, icon}: OSDMessage): void {
     if (window !== window.top || !document.documentElement) {
         return;
     }
@@ -345,11 +325,10 @@ export function showOSD({title, detail}: {title: string; detail?: string}): void
     if (!host!.isConnected) {
         document.documentElement.append(host!);
     }
-    const {host: site, note} = splitOSDDetail(detail);
-    iconSlot!.replaceChildren(modeIcon(osdIconFor(title)));
+    iconSlot!.replaceChildren(modeIcon(icon));
     titleEl!.textContent = title;
     hostEl!.textContent = site ? `·  ${site}` : '';
-    noteEl!.textContent = note;
+    noteEl!.textContent = note || '';
     css(noteEl!, {display: note ? 'block' : 'none'});
 
     removeTimer && clearTimeout(removeTimer);

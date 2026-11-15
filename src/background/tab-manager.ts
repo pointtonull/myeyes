@@ -1,6 +1,7 @@
 import {canInjectScript} from '../background/utils/extension-api';
 import type {MessageBGtoCS, MessageCStoBG, MessageUItoBG} from '../definitions';
 import {MessageTypeCStoBG, MessageTypeBGtoCS, MessageTypeUItoBG} from '../utils/message';
+import type {OSDMessage} from '../utils/osd-message';
 import {isFirefox} from '../utils/platform';
 import {StateManager} from '../utils/state-manager';
 import {getActiveTab, queryTabs} from '../utils/tabs';
@@ -532,7 +533,7 @@ export default class TabManager {
      * MyEyes!: show the on-screen confirmation in the tab's top frame. False
      * when no MyEyes content script runs there (protected / unloaded page).
      */
-    static showOSD(tabId: number, data: {title: string; detail?: string}): boolean {
+    static showOSD(tabId: number, data: OSDMessage): boolean {
         const frame = TabManager.tabs[tabId]?.[0];
         if (!frame) {
             return false;

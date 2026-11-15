@@ -289,9 +289,10 @@ export function DefaultMenu(props: ViewProps) {
                     class={{'me-default__value': true, 'me-default__value--open': store.open}}
                     title={`Default for new sites${keyHint(props, 'cycleDefaultTheme') ? ` · next${keyHint(props, 'cycleDefaultTheme')}` : ''}`}
                     onclick={() => {
-                    store.open = !store.open;
-                    context.refresh();
-                }}>
+                        store.open = !store.open;
+                        context.refresh();
+                    }}
+                >
                     <span class="me-default__value-icon">{onBuiltIn ? <KitIcon name={engine.icon} /> : <KitIcon name="theme" />}</span>
                     <span class="me-default__value-name">{onBuiltIn ? engine.label : fallback.name}</span>
                     <span class="me-chevron"><KitIcon name="chevron-down" /></span>
