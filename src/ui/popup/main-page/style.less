@@ -1,5 +1,97 @@
 @import "../../theme.less";
 
+// --- MyEyes! pane (phase 1: structure; brand polish comes next) ------------
+.me-pills {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+.me-pill {
+    background: @color-control-back;
+    border: @size-border solid @color-border;
+    border-radius: 0.9rem;
+    color: @color-fore;
+    cursor: pointer;
+    font-size: @size-text-large;
+    font-weight: 600;
+    padding: 0.7rem;
+}
+.me-pill--enabled-active {
+    background: @color-control-active;
+    border-color: @color-control-active;
+    box-shadow: 0 0 12px fade(@color-control-active, 70%);
+    color: #fff;
+}
+.me-pill--disabled-active {
+    border-color: @color-fore;
+    color: #fff;
+}
+.me-modes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+}
+.me-mode {
+    background: @color-control-back;
+    border: @size-border solid @color-border;
+    border-radius: 0.6rem;
+    color: @color-fore;
+    cursor: pointer;
+    font-size: @size-text-small;
+    padding: 0.6rem 0.2rem;
+}
+.me-mode--active {
+    border-color: @color-control-active;
+    box-shadow: 0 0 10px fade(@color-control-active, 60%);
+    color: #fff;
+}
+.me-sliders {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 0.75rem;
+}
+.me-ai {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+.me-ai__btn {
+    background: @color-control-back;
+    border: @size-border solid @color-border;
+    border-radius: 0.9rem;
+    color: @color-fore;
+    cursor: not-allowed;
+    font-weight: 600;
+    opacity: 0.85;
+    padding: 0.7rem;
+}
+.me-ai__btn--enhance {
+    background: @color-control-active;
+    border-color: @color-control-active;
+    color: #fff;
+}
+.me-default {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+}
+.me-default__label {
+    font-weight: 600;
+}
+.me-default__value {
+    background: @color-control-back;
+    border: @size-border solid @color-border;
+    border-radius: 0.9rem;
+    color: @color-fore;
+    cursor: pointer;
+    padding: 0.4rem 0.75rem;
+}
+.me-footer {
+    border-top: @size-border solid @color-border;
+    padding-top: @indent-large;
+}
+
 .app-switch {
     &__control {
         width: calc(100% - @size-border * 2);
