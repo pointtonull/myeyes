@@ -14,7 +14,15 @@
 - 🔄 Community per-site fixes, fetched & cached from upstream at runtime
 - 🧩 Minimal, keyboard-first UI — no tabs, no clutter
 
-**Roadmap:** named reusable themes · keyboard commands for all toggles · community userstyles (UserStyles.world / USO).
+**Roadmap:** named reusable themes · keyboard commands for all toggles · community userstyles (UserStyles.world / USO) · AI-enhanced page adaptation using **local, on-device models** (declutter, improve readability — nothing leaves your machine).
+
+## Screenshots
+
+<p align="center">
+  <img height="340" alt="MyEyes! popup" src="brand/screenshots/popup.png">
+  &nbsp;&nbsp;
+  <img height="340" alt="Hacker News darkened by MyEyes!" src="brand/screenshots/hacker-news-dark.png">
+</p>
 
 ## Build
 

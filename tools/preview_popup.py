@@ -127,19 +127,21 @@ def serve(directory, port):
     return httpd
 
 
-def crop_popup(png_path):
-    """Crop the full-page shot to the top-left popup column (body margin:0)."""
+def crop_popup(png_path, bg=(0x16, 0x18, 0x2e), pad=6):
+    """Crop the full-page shot tightly to the popup (its content bounding box)."""
     try:
-        from PIL import Image
+        from PIL import Image, ImageChops
     except ImportError:
         return None
     im = Image.open(png_path).convert("RGB")
-    # popup is ~240px wide; keep a little margin, clip to actual height
-    cw = min(300, im.width)
-    crop = im.crop((0, 0, cw, min(560, im.height)))
-    crop = crop.resize((crop.width * 2, crop.height * 2), Image.LANCZOS)
+    diff = ImageChops.difference(im, Image.new("RGB", im.size, bg)).convert("L")
+    bbox = diff.point(lambda p: 255 if p > 18 else 0).getbbox()
+    if bbox:
+        left, top, right, bottom = bbox
+        im = im.crop((max(0, left - pad), max(0, top - pad),
+                      min(im.width, right + pad), min(im.height, bottom + pad)))
     out = png_path.replace(".png", "_crop.png")
-    crop.save(out)
+    im.resize((im.width * 2, im.height * 2), Image.LANCZOS).save(out)
     return out
 
 
