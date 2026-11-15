@@ -3,7 +3,7 @@ import {m} from 'malevic';
 // Inline SVG icons for the MyEyes! pane (see brand/reference/popup-mockup.png).
 // Stroke-based, currentColor, so CSS controls color/glow per context.
 
-function svg(children: Malevic.Child, opts: {fill?: boolean} = {}) {
+function svg(children: any, opts: {fill?: boolean} = {}) {
     return (
         <svg
             viewBox="0 0 24 24"

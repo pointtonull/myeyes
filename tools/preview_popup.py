@@ -66,6 +66,21 @@ MOCK_DATA = {
 MOCK_SCRIPT = """
 <style>html{{background:#16182e}}body{{margin:0 !important}}</style>
 <script>
+function meShowErr(msg, stack) {{
+  var p = document.createElement('pre');
+  p.style.cssText = 'color:#f88;white-space:pre-wrap;font-size:12px;padding:8px;position:relative;z-index:9';
+  p.textContent = 'ERROR: ' + msg + '\\n' + (stack || '');
+  (document.body || document.documentElement).appendChild(p);
+}}
+var _ce = console.error;
+console.error = function() {{
+  try {{ meShowErr('console.error: ' + Array.prototype.map.call(arguments, function(a) {{ return (a && a.stack) || String(a); }}).join(' ')); }} catch (e) {{}}
+  return _ce.apply(console, arguments);
+}};
+window.addEventListener('error', function(e) {{ meShowErr(e.message || e.error, e.error && e.error.stack); }});
+window.addEventListener('unhandledrejection', function(e) {{
+  var r = e.reason || {{}}; meShowErr('UNHANDLED: ' + (r.message || r), r.stack);
+}});
 (function() {{
   var DATA = {data};
   var MSG = {{}};
