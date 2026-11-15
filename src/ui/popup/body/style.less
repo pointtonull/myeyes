@@ -25,16 +25,28 @@
     }
 
     .m-logo {
-        background-image: url('../assets/images/darkreader-type.svg');
-        background-position: center;
-        background-size: 100%;
-        display: inline-block;
+        align-items: center;
+        display: flex;
+        gap: 0.4rem;
         grid-area: logo;
-        height: @popup-content-width / 10;
+        justify-content: center;
         margin: 0 auto;
         outline: none;
-        text-indent: -999rem;
-        width: @popup-content-width;
+
+        &__icon {
+            height: 1.5rem;
+            width: auto;
+        }
+
+        &__text {
+            background: linear-gradient(90deg, #38bdf8, #7c6cf0, #a855f7);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
     }
 
     .m-help-button {
