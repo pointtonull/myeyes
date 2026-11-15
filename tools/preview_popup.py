@@ -68,13 +68,31 @@ MOCK_DATA = {
     "uiHighlights": [],
 }
 
-SCENARIOS = ("plain", "named", "modified")
+SCENARIOS = ("plain", "named", "modified", "engine", "custom", "disabled")
 
 
 def mock_data(scenario="plain"):
-    """MOCK_DATA for a scenario: no themes / named themes / unsaved changes."""
+    """MOCK_DATA for a scenario (example.com is the active tab):
+
+    plain     no saved themes, site follows the built-in Dynamic default
+    named     3 saved themes, site pinned to Night, default = Warm sepia
+    modified  named + unsaved tweaks forked from Night (Custom lit, dot on Night)
+    engine    site set to plain Filter+ (Filter+ card lit)
+    custom    site has its own tweaks on the built-in default (Custom · Dynamic)
+    disabled  MyEyes off for the site (Disabled pill, stressed mascot)
+    """
     data = json.loads(json.dumps(MOCK_DATA))
     settings = data["settings"]
+    if scenario == "engine":
+        settings["customThemes"] = [
+            {"url": ["example.com"], "kind": "engine", "theme": {**THEME, "engine": "cssFilter"}},
+        ]
+    if scenario == "custom":
+        settings["customThemes"] = [
+            {"url": ["example.com"], "baseId": "default", "theme": {**THEME, "contrast": 120, "sepia": 15}},
+        ]
+    if scenario == "disabled":
+        settings["disabledFor"] = ["example.com"]
     if scenario in ("named", "modified"):
         settings["presets"] = [
             {"id": "night", "name": "Night", "urls": ["example.com"],

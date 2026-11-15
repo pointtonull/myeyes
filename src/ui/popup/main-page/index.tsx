@@ -1,28 +1,28 @@
 import {m} from 'malevic';
 
 import type {ViewProps} from '../../../definitions';
-import type {ThemeEngine} from '../../../generators/theme-engines';
-import {isURLEnabled} from '../../../utils/url';
+import {customizeSite, pickSiteEngine, siteMode} from '../../../utils/named-themes';
+import {getURLHostOrProtocol, isURLEnabled} from '../../../utils/url';
 import {Slider} from '../../controls';
 import {formatPercent} from '../theme/controls/format';
 import {getCurrentThemePreset} from '../theme/utils';
 
 import {KitIcon} from './kit-icon';
 import type {KitIconName} from './kit-icon';
-import {MODES} from './modes';
+import {MODES, engineLabel, modeFor} from './modes';
 import {DefaultMenu, ThemeMenu} from './theme-menus';
 
-// MyEyes! popup pane (see brand/reference/popup-mockup.png). The top area
-// controls the CURRENT site — edits fork its theme until saved (see
+// MyEyes! popup pane (brand/ui-kit/reference/approved-popup-mockup.png). The
+// top area controls the CURRENT site — edits fork its theme until saved (see
 // utils/named-themes); "Default for new sites" is the global fallback.
+// NB: never name a variable `m` in here — it is Malevic's JSX factory.
 
-function EnablePills(props: ViewProps) {
-    const tab = props.data.activeTab;
-    const isPageEnabled = isURLEnabled(
-        tab.url, props.data.settings, tab, props.data.isAllowedFileSchemeAccess);
+const MASCOT_HAPPY = '../assets/images/myeyes-mascot.png';
+const MASCOT_STRESSED = '../assets/images/myeyes/mascot/blob-stressed.svg';
 
+function EnablePills(props: ViewProps & {isPageEnabled: boolean}) {
     function set(enabled: boolean) {
-        if (enabled !== isPageEnabled) {
+        if (enabled !== props.isPageEnabled) {
             props.actions.toggleActiveTab();
         }
     }
@@ -30,14 +30,14 @@ function EnablePills(props: ViewProps) {
     return (
         <div class="me-pills">
             <button
-                class={{'me-pill': true, 'me-pill--disabled': true, 'me-pill--active': !isPageEnabled}}
+                class={{'me-pill': true, 'me-pill--disabled': true, 'me-pill--active': !props.isPageEnabled}}
                 onclick={() => set(false)}
             >
                 <span class="me-pill__icon"><KitIcon name="mode-disabled" /></span>
                 <span class="me-pill__label">Disabled</span>
             </button>
             <button
-                class={{'me-pill': true, 'me-pill--enabled': true, 'me-pill--active': isPageEnabled}}
+                class={{'me-pill': true, 'me-pill--enabled': true, 'me-pill--active': props.isPageEnabled}}
                 onclick={() => set(true)}
             >
                 <span class="me-pill__icon"><KitIcon name="mode-enabled" /></span>
@@ -47,18 +47,44 @@ function EnablePills(props: ViewProps) {
     );
 }
 
-function EngineCards(props: {engine: string; onEngine: (e: ThemeEngine) => void}) {
+function ModeCard(props: {icon: KitIconName; label: string; sub?: string; active: boolean; title: string; onclick: () => void}) {
+    return (
+        <button class={{'me-card': true, 'me-card--active': props.active}} title={props.title} onclick={props.onclick}>
+            <span class="me-card__icon"><KitIcon name={props.icon} /></span>
+            <span class="me-card__label">{props.label}</span>
+            {props.sub ? <span class="me-card__sub">{props.sub}</span> : null}
+        </button>
+    );
+}
+
+// One card lit at a time, showing where this site's look comes from
+// (siteMode): a plain engine, Custom (its own tweaks), or a saved Theme (the
+// ThemeMenu card).
+function ModeCards(props: ViewProps) {
+    const {settings, activeTab} = props.data;
+    const url = activeTab.url;
+    const host = getURLHostOrProtocol(url);
+    const current = siteMode(settings, url);
+    const isCustom = current.card === 'custom';
     return (
         <Array>
             {MODES.map((mode) => (
-                <button
-                    class={{'me-card': true, 'me-card--active': props.engine === mode.engine}}
-                    onclick={() => props.onEngine(mode.engine)}
-                >
-                    <span class="me-card__icon"><KitIcon name={mode.icon} /></span>
-                    <span class="me-card__label">{mode.label}</span>
-                </button>
+                <ModeCard
+                    icon={mode.icon}
+                    label={mode.label}
+                    active={current.card === 'engine' && modeFor(current.engine).engine === mode.engine}
+                    title={`Use plain ${mode.label} on ${host}`}
+                    onclick={() => props.actions.changeSettings(pickSiteEngine(settings, url, host, mode.engine))}
+                />
             ))}
+            <ModeCard
+                icon="custom"
+                label="Custom"
+                sub={isCustom ? engineLabel(current.engine) : undefined}
+                active={isCustom}
+                title={isCustom ? `${host} has its own settings` : `Give ${host} its own settings (or just move a slider)`}
+                onclick={() => props.actions.changeSettings(customizeSite(settings, url, host))}
+            />
         </Array>
     );
 }
@@ -113,18 +139,22 @@ type MainPageProps = ViewProps & {
 
 export default function MainPage(props: MainPageProps) {
     const preset = getCurrentThemePreset(props);
+    const tab = props.data.activeTab;
+    const isPageEnabled = isURLEnabled(tab.url, props.data.settings, tab, props.data.isAllowedFileSchemeAccess);
     return (
         <Array>
             <section class="m-section me-top">
-                <img class="me-mascot" src="../assets/images/myeyes-mascot.png" alt="" />
-                <EnablePills {...props} />
+                {/* mascot mood follows the site: happy when darkened, stressed when not */}
+                <img
+                    class={{'me-mascot': true, 'me-mascot--stressed': !isPageEnabled}}
+                    src={isPageEnabled ? MASCOT_HAPPY : MASCOT_STRESSED}
+                    alt=""
+                />
+                <EnablePills {...props} isPageEnabled={isPageEnabled} />
             </section>
             <section class="m-section me-modes-section">
                 <div class="me-modes">
-                    <EngineCards
-                        engine={preset.theme.engine}
-                        onEngine={(engine) => preset.change({engine})}
-                    />
+                    <ModeCards {...props} />
                     <ThemeMenu {...props} onAdvanced={props.onThemeNavClick} />
                 </div>
             </section>

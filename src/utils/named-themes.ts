@@ -1,4 +1,5 @@
 import type {CustomSiteConfig, Theme, UserSettings} from '../definitions';
+import {ThemeEngine} from '../generators/theme-engines';
 
 import {isURLInList, isURLMatched} from './url';
 
@@ -17,6 +18,12 @@ import {isURLInList, isURLMatched} from './url';
  *   user picks Save (write back) or Save as (new named theme). Plain custom
  *   entries (no baseId, e.g. Dark Reader's built-in filter-mode sites) keep
  *   upstream's behaviour.
+ * - A site that just uses a plain engine (picked on the Dynamic / Filter+
+ *   card) is a `customThemes` entry with `kind: 'engine'`: the built-in theme
+ *   with that engine. Tweaking it turns it into a fork of the built-in.
+ *
+ * The pane's cards show where a site's look comes from (siteMode): a plain
+ * engine, Custom (its own tweaks), or a saved Theme.
  *
  * Every mutation returns a patch for `changeSettings`, never mutates input.
  */
@@ -39,13 +46,32 @@ export interface SiteTheme {
     /** The named theme the site is on (preset id or DEFAULT_THEME_ID); '' for a plain custom site theme. */
     themeId: string;
     themeName: string;
-    source: 'fork' | 'custom' | 'preset' | 'default';
+    source: 'fork' | 'custom' | 'engine' | 'preset' | 'default';
     /** The site has unsaved changes forked from `themeId`. */
     modified: boolean;
 }
 
+/** Which mode card is lit for a site: a plain engine, Custom (own tweaks), or a saved Theme. */
+export interface SiteMode {
+    card: 'engine' | 'custom' | 'theme';
+    /** The engine in use (for Custom: its base engine). */
+    engine: Theme['engine'];
+}
+
+const PLAIN_ENGINES: Array<Theme['engine']> = [ThemeEngine.dynamicTheme, ThemeEngine.cssFilter, ThemeEngine.svgFilter];
+
 function findSiteCustom(settings: ThemeSettings, url: string): CustomSiteConfig | undefined {
     return settings.customThemes.find(({url: list}) => isURLInList(url, list));
+}
+
+/** A plain-engine entry becomes a fork of the built-in theme once the user tweaks it. */
+function asFork(custom: CustomSiteConfig): CustomSiteConfig {
+    if (custom.kind !== 'engine') {
+        return custom;
+    }
+    const fork: CustomSiteConfig = {...custom, baseId: DEFAULT_THEME_ID};
+    delete fork.kind;
+    return fork;
 }
 
 /** Drop the site's custom/forked theme and unpin it from every named theme. */
@@ -80,6 +106,9 @@ export function getDefaultTheme(settings: ThemeSettings): NamedTheme {
 export function resolveSiteTheme(settings: ThemeSettings, url: string): SiteTheme {
     const custom = findSiteCustom(settings, url);
     if (custom) {
+        if (custom.kind === 'engine') {
+            return {theme: custom.theme, themeId: DEFAULT_THEME_ID, themeName: DEFAULT_THEME_NAME, source: 'engine', modified: false};
+        }
         const base = custom.baseId ? getNamedTheme(settings, custom.baseId) : null;
         if (base) {
             return {theme: custom.theme, themeId: base.id, themeName: base.name, source: 'fork', modified: true};
@@ -94,12 +123,63 @@ export function resolveSiteTheme(settings: ThemeSettings, url: string): SiteThem
     return {theme: fallback.theme, themeId: fallback.id, themeName: fallback.name, source: 'default', modified: false};
 }
 
+/** Where the site's look comes from, for the mode cards (one card lit at a time). */
+export function siteMode(settings: ThemeSettings, url: string): SiteMode {
+    const site = resolveSiteTheme(settings, url);
+    const engine = site.theme.engine;
+    const plain = PLAIN_ENGINES.includes(engine);
+    switch (site.source) {
+        case 'engine':
+            return {card: plain ? 'engine' : 'custom', engine};
+        case 'fork':
+        case 'custom':
+            return {card: 'custom', engine};
+        case 'preset':
+            return {card: 'theme', engine};
+        default:
+            if (site.themeId !== DEFAULT_THEME_ID) {
+                return {card: 'theme', engine};
+            }
+            return {card: plain ? 'engine' : 'custom', engine};
+    }
+}
+
+/**
+ * Dynamic / Filter+ card: the site uses a plain engine — the built-in theme
+ * with that engine. Replaces any tweaks, custom theme or pinned theme; when
+ * that is exactly what the default already gives, the site just follows it.
+ */
+export function pickSiteEngine(settings: ThemeSettings, url: string, host: string, engine: Theme['engine']): ThemePatch {
+    const cleared = withoutSite(settings, url);
+    const defaultIsPlain = getDefaultTheme(settings).id === DEFAULT_THEME_ID && settings.theme.engine === engine;
+    if (defaultIsPlain) {
+        return cleared;
+    }
+    return {
+        ...cleared,
+        customThemes: cleared.customThemes.concat({url: [host], theme: {...settings.theme, engine}, kind: 'engine'}),
+    };
+}
+
+/** Custom card: start customizing this site — fork its current look (no-op if it already has its own). */
+export function customizeSite(settings: ThemeSettings, url: string, host: string): ThemePatch {
+    const custom = findSiteCustom(settings, url);
+    if (custom) {
+        if (custom.kind !== 'engine') {
+            return {};
+        }
+        return {customThemes: settings.customThemes.map((c) => (c === custom ? asFork(c) : c))};
+    }
+    const site = resolveSiteTheme(settings, url);
+    return {customThemes: settings.customThemes.concat({url: [host], theme: {...site.theme}, baseId: site.themeId})};
+}
+
 /** Apply a theme change to the site only: edit its fork/custom theme, or fork its current theme. */
 export function editSiteTheme(settings: ThemeSettings, url: string, host: string, change: Partial<Theme>): ThemePatch {
     const custom = findSiteCustom(settings, url);
     if (custom) {
         return {
-            customThemes: settings.customThemes.map((c) => (c === custom ? {...c, theme: {...c.theme, ...change}} : c)),
+            customThemes: settings.customThemes.map((c) => (c === custom ? {...asFork(c), theme: {...c.theme, ...change}} : c)),
         };
     }
     const site = resolveSiteTheme(settings, url);

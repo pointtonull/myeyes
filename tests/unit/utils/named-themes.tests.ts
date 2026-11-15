@@ -3,8 +3,11 @@ import type {ThemePreset} from '../../../src/definitions';
 import {
     DEFAULT_THEME_ID,
     assignSiteTheme,
+    customizeSite,
     deleteNamedTheme,
     editSiteTheme,
+    pickSiteEngine,
+    siteMode,
     getDefaultTheme,
     renameNamedTheme,
     resolveSiteTheme,
@@ -204,5 +207,94 @@ describe('managing named themes', () => {
         expect(suggestThemeName(settings, 'Sepia')).toBe('Sepia');
         expect(suggestThemeName(settings, 'Night')).toBe('Night 3');
         expect(suggestThemeName(settings, 'Default')).toBe('Default 2');
+    });
+});
+
+describe('mode cards (siteMode): one card lit, showing where the look comes from', () => {
+    it('a site following the built-in default lights its engine', () => {
+        expect(siteMode(makeSettings(), OTHER_URL)).toEqual({card: 'engine', engine: ThemeEngine.dynamicTheme});
+    });
+
+    it('a site on a saved theme lights Theme (pinned, or through a named default)', () => {
+        expect(siteMode(makeSettings({presets: [night()]}), NIGHT_URL).card).toBe('theme');
+        expect(siteMode(makeSettings({presets: [night([])], defaultThemeId: 'night'}), OTHER_URL).card).toBe('theme');
+    });
+
+    it('tweaks light Custom, keeping the base engine', () => {
+        let settings = makeSettings({presets: [night()]});
+        settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 120}));
+        expect(siteMode(settings, NIGHT_URL)).toEqual({card: 'custom', engine: ThemeEngine.dynamicTheme});
+    });
+});
+
+describe('Dynamic / Filter+ cards: a plain engine for the site', () => {
+    it('stores a plain-engine entry when it differs from the default', () => {
+        const settings = makeSettings();
+        const after = apply(settings, pickSiteEngine(settings, OTHER_URL, 'other.example', ThemeEngine.cssFilter));
+        expect(after.customThemes).toEqual([
+            {url: ['other.example'], theme: {...settings.theme, engine: ThemeEngine.cssFilter}, kind: 'engine'},
+        ]);
+        expect(siteMode(after, OTHER_URL)).toEqual({card: 'engine', engine: ThemeEngine.cssFilter});
+        expect(resolveSiteTheme(after, OTHER_URL)).toMatchObject({source: 'engine', modified: false});
+        expect(saveSiteTheme(after, OTHER_URL)).toEqual({});
+    });
+
+    it('just follows the default when that already is the same plain engine', () => {
+        let settings = makeSettings();
+        settings = apply(settings, pickSiteEngine(settings, OTHER_URL, 'other.example', ThemeEngine.cssFilter));
+        const after = apply(settings, pickSiteEngine(settings, OTHER_URL, 'other.example', ThemeEngine.dynamicTheme));
+        expect(after.customThemes).toEqual([]);
+        expect(siteMode(after, OTHER_URL)).toEqual({card: 'engine', engine: ThemeEngine.dynamicTheme});
+    });
+
+    it('replaces tweaks and unpins a saved theme', () => {
+        let settings = makeSettings({presets: [night()]});
+        settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 120}));
+        const after = apply(settings, pickSiteEngine(settings, NIGHT_URL, 'night.example', ThemeEngine.dynamicTheme));
+        expect(after.presets[0].urls).toEqual([]);
+        expect(resolveSiteTheme(after, NIGHT_URL).source).toBe('default');
+    });
+
+    it('stays explicit when the default is a named theme', () => {
+        const settings = makeSettings({presets: [night([])], defaultThemeId: 'night'});
+        const after = apply(settings, pickSiteEngine(settings, OTHER_URL, 'other.example', ThemeEngine.dynamicTheme));
+        expect(after.customThemes[0].kind).toBe('engine');
+        expect(siteMode(after, OTHER_URL).card).toBe('engine');
+    });
+
+    it('tweaking a plain-engine site turns it into a fork of the built-in theme', () => {
+        let settings = makeSettings();
+        settings = apply(settings, pickSiteEngine(settings, OTHER_URL, 'other.example', ThemeEngine.cssFilter));
+        const after = apply(settings, editSiteTheme(settings, OTHER_URL, 'other.example', {brightness: 90}));
+        expect(after.customThemes).toHaveLength(1);
+        expect(after.customThemes[0]).toMatchObject({
+            baseId: DEFAULT_THEME_ID,
+            theme: {engine: ThemeEngine.cssFilter, brightness: 90},
+        });
+        expect(after.customThemes[0].kind).toBeUndefined();
+        expect(siteMode(after, OTHER_URL)).toEqual({card: 'custom', engine: ThemeEngine.cssFilter});
+    });
+});
+
+describe('Custom card: the site gets its own settings', () => {
+    it('forks the current look', () => {
+        const settings = makeSettings({presets: [night()]});
+        const after = apply(settings, customizeSite(settings, NIGHT_URL, 'night.example'));
+        expect(after.customThemes[0]).toMatchObject({baseId: 'night', theme: {brightness: 80}});
+        expect(siteMode(after, NIGHT_URL).card).toBe('custom');
+    });
+
+    it('turns a plain-engine site into a fork of the built-in theme', () => {
+        let settings = makeSettings();
+        settings = apply(settings, pickSiteEngine(settings, OTHER_URL, 'other.example', ThemeEngine.cssFilter));
+        const after = apply(settings, customizeSite(settings, OTHER_URL, 'other.example'));
+        expect(after.customThemes[0]).toMatchObject({baseId: DEFAULT_THEME_ID});
+        expect(siteMode(after, OTHER_URL)).toEqual({card: 'custom', engine: ThemeEngine.cssFilter});
+    });
+
+    it('is a no-op when the site already has its own tweaks', () => {
+        let settings = makeSettings({presets: [night()]});
+        settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 120}));
+        expect(customizeSite(settings, NIGHT_URL, 'night.example')).toEqual({});
     });
 });

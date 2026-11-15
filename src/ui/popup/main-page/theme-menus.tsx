@@ -14,6 +14,7 @@ import {
     saveSiteThemeAs,
     setDefaultEngine,
     setDefaultTheme,
+    siteMode,
     suggestThemeName,
 } from '../../../utils/named-themes';
 import type {ThemePatch} from '../../../utils/named-themes';
@@ -70,6 +71,11 @@ export function ThemeMenu(props: ViewProps & {onAdvanced: () => void}) {
     const host = getURLHostOrProtocol(url);
     const site = resolveSiteTheme(settings, url);
     const pinned = settings.presets.find(({urls}) => isURLInList(url, urls));
+    // lit when the site's look comes from a saved theme; named whenever the
+    // site is on (or customizing) a saved theme, else just "Theme"
+    const onSavedTheme = siteMode(settings, url).card === 'theme';
+    const cardName = site.themeId && site.themeId !== DEFAULT_THEME_ID ? site.themeName : 'Theme';
+    const followsDefault = !pinned && (site.source === 'default' || site.source === 'fork');
 
     function close() {
         store.open = false;
@@ -150,7 +156,7 @@ export function ThemeMenu(props: ViewProps & {onAdvanced: () => void}) {
                 <div class="me-menu__section">
                     <div class="me-menu__title">Theme for {host}</div>
                     <MenuItem
-                        checked={!pinned && site.source !== 'custom'}
+                        checked={followsDefault}
                         icon={<KitIcon name="home" />}
                         label={`Default for new sites · ${defaultLabel(props)}`}
                         onclick={() => commit(assignSiteTheme(settings, url, host, DEFAULT_THEME_ID))}
@@ -179,8 +185,8 @@ export function ThemeMenu(props: ViewProps & {onAdvanced: () => void}) {
     return (
         <div class="me-theme">
             <button
-                class={{'me-card': true, 'me-card--theme': true, 'me-card--open': store.open}}
-                title={site.modified ? 'Unsaved changes — open to Save, Save as… or Revert' : `Theme: ${site.themeName}`}
+                class={{'me-card': true, 'me-card--theme': true, 'me-card--active': onSavedTheme, 'me-card--open': store.open}}
+                title={site.modified ? 'Unsaved changes — open to Save, Save as… or Revert' : `Theme: ${cardName}`}
                 onclick={() => {
                     store.open = !store.open;
                     store.naming = false;
@@ -192,7 +198,7 @@ export function ThemeMenu(props: ViewProps & {onAdvanced: () => void}) {
                     {site.modified ? <span class="me-dot" /> : null}
                 </span>
                 <span class="me-card__label">
-                    <span class="me-card__name">{site.themeName}</span>
+                    <span class="me-card__name">{cardName}</span>
                     <span class="me-chevron"><KitIcon name="chevron-down" /></span>
                 </span>
             </button>

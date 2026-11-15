@@ -81,6 +81,8 @@ export interface CustomSiteConfig {
     builtIn?: boolean;
     /** MyEyes!: set when this is an unsaved fork of a named theme (see utils/named-themes). */
     baseId?: string;
+    /** MyEyes!: 'engine' = the site just uses a plain engine (the built-in theme with that engine). */
+    kind?: 'engine';
 }
 
 export interface ThemePreset {
