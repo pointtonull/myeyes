@@ -1,22 +1,22 @@
 {
     "manifest_version": 2,
-    "name": "Dark Reader",
-    "version": "4.9.135",
-    "author": "Alexander Shutau",
+    "name": "MyEyes!",
+    "version": "0.1.0",
+    "author": "Carlos Cabrera",
     "description": "__MSG_extension_description__",
     "default_locale": "en",
     "browser_action": {
-        "default_title": "Dark Reader",
+        "default_title": "MyEyes!",
         "default_icon": {
-            "38": "icons/dr_active_38.png",
-            "19": "icons/dr_active_19.png"
+            "38": "icons/me_active_38.png",
+            "19": "icons/me_active_19.png"
         },
         "default_popup": "ui/popup/index.html"
     },
     "icons": {
-        "16": "icons/dr_16.png",
-        "48": "icons/dr_48.png",
-        "128": "icons/dr_128.png"
+        "16": "icons/me_16.png",
+        "48": "icons/me_48.png",
+        "128": "icons/me_128.png"
     },
     "background": {
         "persistent": true,

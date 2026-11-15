@@ -1,7 +1,7 @@
 {
-  "name": "darkreader",
-  "version": "4.9.135",
-  "description": "Dark mode for every website",
+  "name": "myeyes",
+  "version": "0.1.0",
+  "description": "MyEyes! — accessibility-first dark mode for every website",
   "scripts": {
     "api": "node --max-old-space-size=3072 tasks/cli.js build --api",
     "build": "node --max-old-space-size=3072 tasks/cli.js build --release",
@@ -46,12 +46,12 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/darkreader/darkreader.git"
+    "url": "git+https://github.com/pointtonull/myeyes.git"
   },
-  "author": "Alexander Shutau <darkreaderapp@gmail.com> (https://darkreader.org/)",
+  "author": "Carlos Cabrera",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/darkreader/darkreader/issues"
+    "url": "https://github.com/pointtonull/myeyes/issues"
   },
   "keywords": [
     "dark-theme",
@@ -62,11 +62,7 @@
     "accessibility",
     "eye-care"
   ],
-  "homepage": "https://darkreader.org/",
-  "funding": {
-    "type": "opencollective",
-    "url": "https://opencollective.com/darkreader/donate"
-  },
+  "homepage": "https://github.com/pointtonull/myeyes",
   "allowScripts": {
     "@parcel/watcher": true,
     "fsevents": true,
@@ -115,6 +111,7 @@
     "tslib": "2.8.1",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
+    "web-ext": "^10.8.0",
     "ws": "8.22.0",
     "yazl": "3.3.1"
   },
