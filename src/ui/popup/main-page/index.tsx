@@ -7,6 +7,7 @@ import {Slider} from '../../controls';
 import {formatPercent} from '../theme/controls/format';
 import {getCurrentThemePreset} from '../theme/utils';
 
+import {keyHint} from './key-hint';
 import {KitIcon} from './kit-icon';
 import type {KitIconName} from './kit-icon';
 import {MODES, engineLabel, modeFor} from './modes';
@@ -17,8 +18,7 @@ import {DefaultMenu, ThemeMenu} from './theme-menus';
 // utils/named-themes); "Default for new sites" is the global fallback.
 // NB: never name a variable `m` in here — it is Malevic's JSX factory.
 
-const MASCOT_HAPPY = '../assets/images/myeyes-mascot.png';
-const MASCOT_STRESSED = '../assets/images/myeyes/mascot/blob-stressed.svg';
+const MASCOT = '../assets/images/myeyes-mascot.png';
 
 function EnablePills(props: ViewProps & {isPageEnabled: boolean}) {
     function set(enabled: boolean) {
@@ -31,6 +31,7 @@ function EnablePills(props: ViewProps & {isPageEnabled: boolean}) {
         <div class="me-pills">
             <button
                 class={{'me-pill': true, 'me-pill--disabled': true, 'me-pill--active': !props.isPageEnabled}}
+                title={`MyEyes off for this site${keyHint(props, 'addSite')}`}
                 onclick={() => set(false)}
             >
                 <span class="me-pill__icon"><KitIcon name="mode-disabled" /></span>
@@ -38,6 +39,7 @@ function EnablePills(props: ViewProps & {isPageEnabled: boolean}) {
             </button>
             <button
                 class={{'me-pill': true, 'me-pill--enabled': true, 'me-pill--active': props.isPageEnabled}}
+                title={`MyEyes on for this site${keyHint(props, 'addSite')}`}
                 onclick={() => set(true)}
             >
                 <span class="me-pill__icon"><KitIcon name="mode-enabled" /></span>
@@ -144,12 +146,7 @@ export default function MainPage(props: MainPageProps) {
     return (
         <Array>
             <section class="m-section me-top">
-                {/* mascot mood follows the site: happy when darkened, stressed when not */}
-                <img
-                    class={{'me-mascot': true, 'me-mascot--stressed': !isPageEnabled}}
-                    src={isPageEnabled ? MASCOT_HAPPY : MASCOT_STRESSED}
-                    alt=""
-                />
+                <img class="me-mascot" src={MASCOT} alt="" />
                 <EnablePills {...props} isPageEnabled={isPageEnabled} />
             </section>
             <section class="m-section me-modes-section">

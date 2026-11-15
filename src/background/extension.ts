@@ -14,7 +14,7 @@ import {PromiseBarrier} from '../utils/promise-barrier';
 import {StateManager} from '../utils/state-manager';
 import {getActiveTab} from '../utils/tabs';
 import {isInTimeIntervalLocal, nextTimeInterval, isNightAtLocation, nextTimeChangeAtLocation, getDuration} from '../utils/time';
-import {resolveSiteTheme} from '../utils/named-themes';
+import {nextDefaultTheme, nextSiteTheme, resolveSiteTheme} from '../utils/named-themes';
 import {isURLInList, getURLHostOrProtocol, isURLEnabled, isPDF} from '../utils/url';
 
 import ConfigManager from './config-manager';
@@ -358,6 +358,20 @@ export class Extension {
                 Extension.setTheme({engine: next});
                 break;
             }
+            // MyEyes!: cycle the same choices the popup's cards/menus offer
+            // (utils/named-themes): this site's theme, and the default.
+            case 'cycleSiteTheme': {
+                logInfo('Cycle site theme command entered');
+                const url = await TabManager.getActiveTabURL();
+                if (url) {
+                    Extension.changeSettings(nextSiteTheme(UserStorage.settings, url, getURLHostOrProtocol(url)), true);
+                }
+                break;
+            }
+            case 'cycleDefaultTheme':
+                logInfo('Cycle default theme command entered');
+                Extension.changeSettings(nextDefaultTheme(UserStorage.settings));
+                break;
         }
     };
 

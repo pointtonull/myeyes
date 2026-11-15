@@ -266,4 +266,4 @@ export interface News {
 }
 
 // These values need to match those in Manifest
-export type Command = 'toggle' | 'addSite' | 'switchEngine';
+export type Command = 'toggle' | 'addSite' | 'switchEngine' | 'cycleSiteTheme' | 'cycleDefaultTheme';

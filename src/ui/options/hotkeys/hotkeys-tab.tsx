@@ -1,45 +1,39 @@
 import {m} from 'malevic';
 
-import type {ViewProps} from '../../../definitions';
+import type {Command, ViewProps} from '../../../definitions';
 import {getLocalMessage} from '../../../utils/locales';
 import {ControlGroup, Shortcut} from '../../controls';
+
+// MyEyes!: all four keyboard commands are listed (and rebindable) here, not
+// only upstream's toggle/addSite.
+const HOTKEYS: Array<{command: Command; description: string}> = [
+    {command: 'toggle', description: 'Enable/disable the extension'},
+    {command: 'addSite', description: 'Toggle the current website'},
+    {command: 'cycleSiteTheme', description: 'Next theme for the current website'},
+    {command: 'cycleDefaultTheme', description: 'Next default theme for new sites'},
+];
 
 export function HotkeysTab(props: ViewProps): Malevic.Child {
     const {data, actions} = props;
     return <div class="settings-tab">
-        <ControlGroup>
-            <ControlGroup.Control>
-                <Shortcut
-                    class="hotkeys__control"
-                    commandName="toggle"
-                    shortcuts={data.shortcuts}
-                    textTemplate={(hotkey) => (hotkey
-                        ? hotkey
-                        : getLocalMessage('click_to_set_shortcut')
-                    )}
-                    onSetShortcut={(shortcut) => actions.setShortcut('toggle', shortcut)}
-                />
-            </ControlGroup.Control>
-            <ControlGroup.Description>
-                Enable/disable the extension
-            </ControlGroup.Description>
-        </ControlGroup>
-        <ControlGroup>
-            <ControlGroup.Control>
-                <Shortcut
-                    class="hotkeys__control"
-                    commandName="addSite"
-                    shortcuts={data.shortcuts}
-                    textTemplate={(hotkey) => (hotkey
-                        ? hotkey
-                        : getLocalMessage('click_to_set_shortcut')
-                    )}
-                    onSetShortcut={(shortcut) => actions.setShortcut('addSite', shortcut)}
-                />
-            </ControlGroup.Control>
-            <ControlGroup.Description>
-                Toggle the current website
-            </ControlGroup.Description>
-        </ControlGroup>
+        {HOTKEYS.map(({command, description}) => (
+            <ControlGroup>
+                <ControlGroup.Control>
+                    <Shortcut
+                        class="hotkeys__control"
+                        commandName={command}
+                        shortcuts={data.shortcuts}
+                        textTemplate={(hotkey) => (hotkey
+                            ? hotkey
+                            : getLocalMessage('click_to_set_shortcut')
+                        )}
+                        onSetShortcut={(shortcut) => actions.setShortcut(command, shortcut)}
+                    />
+                </ControlGroup.Control>
+                <ControlGroup.Description>
+                    {description}
+                </ControlGroup.Description>
+            </ControlGroup>
+        ))}
     </div>;
 }

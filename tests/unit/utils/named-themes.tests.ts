@@ -6,6 +6,8 @@ import {
     customizeSite,
     deleteNamedTheme,
     editSiteTheme,
+    nextDefaultTheme,
+    nextSiteTheme,
     pickSiteEngine,
     siteMode,
     getDefaultTheme,
@@ -296,5 +298,59 @@ describe('Custom card: the site gets its own settings', () => {
         let settings = makeSettings({presets: [night()]});
         settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 120}));
         expect(customizeSite(settings, NIGHT_URL, 'night.example')).toEqual({});
+    });
+});
+
+describe('keyboard: next theme for this site', () => {
+    const sepia = (): ThemePreset => ({...night([]), id: 'sepia', name: 'Sepia'});
+
+    it('cycles Dynamic → Filter+ → saved themes → back, with the built-in default', () => {
+        let settings = makeSettings({presets: [night([]), sepia()]});
+        const seen: string[] = [];
+        for (let i = 0; i < 5; i++) {
+            settings = apply(settings, nextSiteTheme(settings, OTHER_URL, 'other.example'));
+            const mode = siteMode(settings, OTHER_URL);
+            seen.push(mode.card === 'theme' ? resolveSiteTheme(settings, OTHER_URL).themeName : mode.engine);
+        }
+        expect(seen).toEqual([ThemeEngine.cssFilter, 'Night', 'Sepia', ThemeEngine.dynamicTheme, ThemeEngine.cssFilter]);
+    });
+
+    it('with a saved default: follow it → Dynamic → Filter+ → the other themes → follow', () => {
+        let settings = makeSettings({presets: [night([]), sepia()], defaultThemeId: 'sepia'});
+        const seen: string[] = [];
+        for (let i = 0; i < 5; i++) {
+            settings = apply(settings, nextSiteTheme(settings, OTHER_URL, 'other.example'));
+            const site = resolveSiteTheme(settings, OTHER_URL);
+            seen.push(site.source === 'default' ? 'follow' : site.source === 'engine' ? site.theme.engine : site.themeName);
+        }
+        expect(seen).toEqual([ThemeEngine.dynamicTheme, ThemeEngine.cssFilter, 'Night', 'follow', ThemeEngine.dynamicTheme]);
+    });
+
+    it('moving on drops unsaved tweaks (same as picking from the cards)', () => {
+        let settings = makeSettings({presets: [night()]});
+        settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 120}));
+        settings = apply(settings, nextSiteTheme(settings, NIGHT_URL, 'night.example'));
+        expect(settings.customThemes.some((c) => c.baseId)).toBe(false);
+    });
+});
+
+describe('keyboard: next default theme for new sites', () => {
+    it('cycles Dynamic → Filter+ → each saved theme → Dynamic', () => {
+        let settings = makeSettings({presets: [night([]), {...night([]), id: 'sepia', name: 'Sepia'}]});
+        const seen: string[] = [];
+        for (let i = 0; i < 5; i++) {
+            settings = apply(settings, nextDefaultTheme(settings));
+            const fallback = getDefaultTheme(settings);
+            seen.push(fallback.id === DEFAULT_THEME_ID ? settings.theme.engine : fallback.name);
+        }
+        expect(seen).toEqual([ThemeEngine.cssFilter, 'Night', 'Sepia', ThemeEngine.dynamicTheme, ThemeEngine.cssFilter]);
+    });
+
+    it('just toggles the two engines when there are no saved themes', () => {
+        let settings = makeSettings();
+        settings = apply(settings, nextDefaultTheme(settings));
+        expect(settings.theme.engine).toBe(ThemeEngine.cssFilter);
+        settings = apply(settings, nextDefaultTheme(settings));
+        expect(settings.theme.engine).toBe(ThemeEngine.dynamicTheme);
     });
 });

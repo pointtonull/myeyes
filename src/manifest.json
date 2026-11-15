@@ -59,6 +59,18 @@
             },
             "description": "__MSG_toggle_current_site__"
         },
+        "cycleSiteTheme": {
+            "suggested_key": {
+                "default": "Alt+Shift+T"
+            },
+            "description": "__MSG_cycle_site_theme__"
+        },
+        "cycleDefaultTheme": {
+            "suggested_key": {
+                "default": "Alt+Shift+N"
+            },
+            "description": "__MSG_cycle_default_theme__"
+        },
         "switchEngine": {
             "description": "__MSG_theme_generation_mode__"
         }

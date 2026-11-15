@@ -285,3 +285,74 @@ export function suggestThemeName(settings: ThemeSettings, base: string): string 
         }
     }
 }
+
+// --- Keyboard commands: cycle the same choices the cards / menus offer -------
+
+type CycleChoice =
+    | {kind: 'follow'}
+    | {kind: 'engine'; engine: Theme['engine']}
+    | {kind: 'theme'; id: string};
+
+const CYCLE_ENGINES: Array<Theme['engine']> = [ThemeEngine.dynamicTheme, ThemeEngine.cssFilter];
+
+function cardEngine(engine: Theme['engine']): Theme['engine'] {
+    return engine === ThemeEngine.svgFilter ? ThemeEngine.cssFilter : engine;
+}
+
+/**
+ * "Next theme for this site" (keyboard): Dynamic → Filter+ → each saved theme
+ * → …, plus "follow the default" first when the default is a saved theme.
+ * Choices that would look identical to an existing one are left out, so every
+ * press visibly changes something. Like picking from the cards/menu, moving
+ * on drops the site's unsaved tweaks.
+ */
+export function nextSiteTheme(settings: ThemeSettings, url: string, host: string): ThemePatch {
+    const fallback = getDefaultTheme(settings);
+    const builtInDefault = fallback.id === DEFAULT_THEME_ID;
+    const choices: CycleChoice[] = [
+        ...(builtInDefault ? [] : [{kind: 'follow'} as CycleChoice]),
+        ...CYCLE_ENGINES.map((engine): CycleChoice => ({kind: 'engine', engine})),
+        ...settings.presets
+            .filter((preset) => preset.id !== fallback.id)
+            .map((preset): CycleChoice => ({kind: 'theme', id: preset.id})),
+    ];
+    const site = resolveSiteTheme(settings, url);
+    const index = choices.findIndex((choice) => {
+        if (choice.kind === 'follow') {
+            return site.source === 'default';
+        }
+        if (choice.kind === 'engine') {
+            const plain = site.source === 'engine' || (site.source === 'default' && builtInDefault);
+            return plain && cardEngine(site.theme.engine) === choice.engine;
+        }
+        return site.source === 'preset' && site.themeId === choice.id;
+    });
+    const next = choices[(index + 1) % choices.length];
+    if (next.kind === 'follow') {
+        return assignSiteTheme(settings, url, host, DEFAULT_THEME_ID);
+    }
+    if (next.kind === 'engine') {
+        return pickSiteEngine(settings, url, host, next.engine);
+    }
+    return assignSiteTheme(settings, url, host, next.id);
+}
+
+/** "Next default theme for new sites" (keyboard): Dynamic → Filter+ → each saved theme → … */
+export function nextDefaultTheme(settings: ThemeSettings): ThemePatch {
+    const fallback = getDefaultTheme(settings);
+    const choices: CycleChoice[] = [
+        ...CYCLE_ENGINES.map((engine): CycleChoice => ({kind: 'engine', engine})),
+        ...settings.presets.map((preset): CycleChoice => ({kind: 'theme', id: preset.id})),
+    ];
+    const index = choices.findIndex((choice) => {
+        if (choice.kind === 'engine') {
+            return fallback.id === DEFAULT_THEME_ID && cardEngine(settings.theme.engine) === choice.engine;
+        }
+        return choice.kind === 'theme' && fallback.id === choice.id;
+    });
+    const next = choices[(index + 1) % choices.length];
+    if (next.kind === 'engine') {
+        return setDefaultEngine(settings, next.engine);
+    }
+    return next.kind === 'theme' ? setDefaultTheme(settings, next.id) : {};
+}

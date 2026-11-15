@@ -21,6 +21,7 @@ import type {ThemePatch} from '../../../utils/named-themes';
 import {generateUID} from '../../../utils/uid';
 import {getURLHostOrProtocol, isURLInList} from '../../../utils/url';
 
+import {keyHint} from './key-hint';
 import {KitIcon} from './kit-icon';
 import {MODES, modeFor} from './modes';
 
@@ -186,7 +187,8 @@ export function ThemeMenu(props: ViewProps & {onAdvanced: () => void}) {
         <div class="me-theme">
             <button
                 class={{'me-card': true, 'me-card--theme': true, 'me-card--active': onSavedTheme, 'me-card--open': store.open}}
-                title={site.modified ? 'Unsaved changes — open to Save, Save as… or Revert' : `Theme: ${cardName}`}
+                title={(site.modified ? 'Unsaved changes — open to Save, Save as… or Revert' : `Theme: ${cardName}`) +
+                    (keyHint(props, 'cycleSiteTheme') ? ` · next theme${keyHint(props, 'cycleSiteTheme')}` : '')}
                 onclick={() => {
                     store.open = !store.open;
                     store.naming = false;
@@ -283,7 +285,10 @@ export function DefaultMenu(props: ViewProps) {
             <span class="me-default__home"><KitIcon name="home" /></span>
             <span class="me-default__label">Default for new sites</span>
             <div class="me-default__anchor">
-                <button class={{'me-default__value': true, 'me-default__value--open': store.open}} onclick={() => {
+                <button
+                    class={{'me-default__value': true, 'me-default__value--open': store.open}}
+                    title={`Default for new sites${keyHint(props, 'cycleDefaultTheme') ? ` · next${keyHint(props, 'cycleDefaultTheme')}` : ''}`}
+                    onclick={() => {
                     store.open = !store.open;
                     context.refresh();
                 }}>

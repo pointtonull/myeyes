@@ -21,21 +21,12 @@
     display: flex;
     gap: 0.6rem;
 }
-// one fixed box for every mood so the pills don't shift when it changes
 .me-mascot {
-    box-sizing: border-box; // the stressed mood's padding must not widen the box
     flex: none;
     height: 5.6rem;
     margin: -0.4rem -0.2rem -0.4rem -0.4rem;
     object-fit: contain;
     width: 6.6rem;
-
-    // the kit's stressed blob is a simplified vector: a bit smaller, and a
-    // soft glow so it sits like the detailed art
-    &--stressed {
-        filter: drop-shadow(0 0 10px rgba(152, 96, 245, 0.45));
-        padding: 0.7rem;
-    }
 }
 
 .me-chevron {
