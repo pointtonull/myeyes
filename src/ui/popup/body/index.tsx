@@ -6,6 +6,7 @@ import {isMobile} from '../../../utils/platform';
 import {Overlay} from '../../controls';
 import {openExtensionPage} from '../../utils';
 import MainPage from '../main-page';
+import {GearIcon} from '../main-page/icons';
 import {Page, PageViewer} from '../page-viewer';
 import ThemePage from '../theme/page';
 
@@ -109,9 +110,13 @@ export default function Body(props: ViewProps) {
                 'm-body-short': !props.data.uiHighlights.includes('anniversary'),
             }}
         >
-            <section class="m-section">
+            <header class="m-section m-header">
+                <span class="m-header__side" />
                 <Logo />
-            </section>
+                <button class="m-header__side m-header__gear" onclick={() => openExtensionPage('options')} aria-label="Settings">
+                    <GearIcon />
+                </button>
+            </header>
             <section class="m-section pages-section">
                 <Pages {...props} />
             </section>

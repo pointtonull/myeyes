@@ -24,6 +24,36 @@
         height: 24.4375rem;
     }
 
+    .m-header {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .m-header__side {
+        flex: none;
+        width: 1.6rem;
+    }
+
+    .m-header__gear {
+        align-items: center;
+        background: none;
+        border: none;
+        color: @color-fore;
+        cursor: pointer;
+        display: flex;
+        padding: 0;
+
+        svg {
+            height: 1.4rem;
+            width: 1.4rem;
+        }
+
+        &:hover {
+            color: #fff;
+        }
+    }
+
     .m-logo {
         align-items: center;
         display: flex;
