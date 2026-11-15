@@ -1,26 +1,22 @@
 import {m} from 'malevic';
 
 import type {ViewProps} from '../../../definitions';
-import {ThemeEngine} from '../../../generators/theme-engines';
+import type {ThemeEngine} from '../../../generators/theme-engines';
 import {isURLEnabled} from '../../../utils/url';
 import {Slider} from '../../controls';
 import {formatPercent} from '../theme/controls/format';
 import {getCurrentThemePreset} from '../theme/utils';
 
 import {
-    CodeIcon, FilterIcon, SlidersIcon, LayersIcon, ChevronIcon,
     SunIcon, ContrastIcon, DropletIcon, LeafIcon,
     SparklesIcon, BroomIcon, GlassesHappy, GlassesSquint,
 } from './icons';
+import {MODES} from './modes';
+import {DefaultMenu, ThemeMenu} from './theme-menus';
 
 // MyEyes! popup pane (see brand/reference/popup-mockup.png). The top area
-// controls the CURRENT site; "Default for new sites" is the global fallback.
-
-const MODES = [
-    {engine: ThemeEngine.dynamicTheme, label: 'Dynamic', Icon: CodeIcon},
-    {engine: ThemeEngine.cssFilter, label: 'Filter+', Icon: FilterIcon},
-    {engine: ThemeEngine.staticTheme, label: 'Custom', Icon: SlidersIcon},
-];
+// controls the CURRENT site — edits fork its theme until saved (see
+// utils/named-themes); "Default for new sites" is the global fallback.
 
 function EnablePills(props: ViewProps) {
     const tab = props.data.activeTab;
@@ -53,9 +49,9 @@ function EnablePills(props: ViewProps) {
     );
 }
 
-function ModeCards(props: {engine: string; onEngine: (e: ThemeEngine) => void; onThemeNav: () => void}) {
+function EngineCards(props: {engine: string; onEngine: (e: ThemeEngine) => void}) {
     return (
-        <div class="me-modes">
+        <Array>
             {MODES.map((mode) => (
                 <button
                     class={{'me-card': true, 'me-card--active': props.engine === mode.engine}}
@@ -65,13 +61,7 @@ function ModeCards(props: {engine: string; onEngine: (e: ThemeEngine) => void; o
                     <span class="me-card__label">{mode.label}</span>
                 </button>
             ))}
-            <button class="me-card me-card--theme" onclick={props.onThemeNav}>
-                <span class="me-card__icon"><LayersIcon /></span>
-                <span class="me-card__label">
-                    Theme <span class="me-chevron"><ChevronIcon /></span>
-                </span>
-            </button>
-        </div>
+        </Array>
     );
 }
 
@@ -118,34 +108,6 @@ function AiActions() {
     );
 }
 
-function HomeIcon() {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 11l8-7 8 7" /><path d="M6 10v9h12v-9" />
-        </svg>
-    );
-}
-
-function DefaultForNewSites(props: ViewProps) {
-    const engine = props.data.settings.theme.engine;
-    const current = MODES.find((mode) => mode.engine === engine) || MODES[0];
-    return (
-        <div class="me-default">
-            <span class="me-default__home"><HomeIcon /></span>
-            <span class="me-default__label">Default for new sites</span>
-            <button class="me-default__value" onclick={() => {
-                const i = MODES.findIndex((mode) => mode.engine === engine);
-                const next = MODES[(i + 1) % MODES.length].engine;
-                props.actions.setTheme({engine: next});
-            }}>
-                <span class="me-default__value-icon"><current.Icon /></span>
-                {current.label}
-                <span class="me-chevron"><ChevronIcon /></span>
-            </button>
-        </div>
-    );
-}
-
 type MainPageProps = ViewProps & {
     onThemeNavClick: () => void;
     onSettingsNavClick: () => void;
@@ -160,11 +122,13 @@ export default function MainPage(props: MainPageProps) {
                 <EnablePills {...props} />
             </section>
             <section class="m-section">
-                <ModeCards
-                    engine={preset.theme.engine}
-                    onEngine={(engine) => preset.change({engine})}
-                    onThemeNav={props.onThemeNavClick}
-                />
+                <div class="me-modes">
+                    <EngineCards
+                        engine={preset.theme.engine}
+                        onEngine={(engine) => preset.change({engine})}
+                    />
+                    <ThemeMenu {...props} onAdvanced={props.onThemeNavClick} />
+                </div>
             </section>
             <section class="m-section">
                 <Sliders theme={preset.theme} change={preset.change} />
@@ -173,7 +137,7 @@ export default function MainPage(props: MainPageProps) {
                 <AiActions />
             </section>
             <section class="m-section me-footer">
-                <DefaultForNewSites {...props} />
+                <DefaultMenu {...props} />
             </section>
         </Array>
     );

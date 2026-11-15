@@ -9,6 +9,11 @@ HTTP so the popup renders as a plain page, and let FoxMCP shoot it full-res.
 
     python3 tools/preview_popup.py            # -> shots/popup_preview*.png
     python3 tools/preview_popup.py --out DIR --wait 3
+    # named-themes states: mock data scenario + clicks before the capture
+    python3 tools/preview_popup.py --scenario modified --click .me-card--theme --name theme_menu
+    python3 tools/preview_popup.py --scenario named --click .me-default__value --name default_menu
+    python3 tools/preview_popup.py --scenario named --click .me-card--theme \
+        --click "text=New theme" --name save_as   # "text=…" clicks the button containing …
 
 Needs: a debug build (build/debug/firefox), the running FoxMCP Firefox, Pillow
 (run with ~/.virtualenvs/p3/bin/python), and ~/bin/foxmcp.screenshot.
@@ -44,7 +49,7 @@ COLORSCHEME = {
 }
 SETTINGS = {
     "schemeVersion": 0, "enabled": True, "fetchNews": False, "theme": THEME,
-    "presets": [], "customThemes": [], "enabledByDefault": True,
+    "presets": [], "customThemes": [], "defaultThemeId": "default", "enabledByDefault": True,
     "enabledFor": [], "disabledFor": [], "changeBrowserTheme": False,
     "syncSettings": True, "syncSitesFixes": False,
     "automation": {"enabled": False, "mode": "", "behavior": "OnOff"},
@@ -63,6 +68,31 @@ MOCK_DATA = {
     "uiHighlights": [],
 }
 
+SCENARIOS = ("plain", "named", "modified")
+
+
+def mock_data(scenario="plain"):
+    """MOCK_DATA for a scenario: no themes / named themes / unsaved changes."""
+    data = json.loads(json.dumps(MOCK_DATA))
+    settings = data["settings"]
+    if scenario in ("named", "modified"):
+        settings["presets"] = [
+            {"id": "night", "name": "Night", "urls": ["example.com"],
+             "theme": {**THEME, "brightness": 85, "contrast": 110}},
+            {"id": "sepia", "name": "Warm sepia", "urls": [],
+             "theme": {**THEME, "sepia": 35}},
+            {"id": "reading", "name": "Reading", "urls": [],
+             "theme": {**THEME, "engine": "cssFilter"}},
+        ]
+        settings["defaultThemeId"] = "sepia"
+    if scenario == "modified":
+        settings["customThemes"] = [
+            {"url": ["example.com"], "baseId": "night",
+             "theme": {**THEME, "brightness": 85, "contrast": 125, "sepia": 10}},
+        ]
+    return data
+
+
 MOCK_SCRIPT = """
 <style>html{{background:#16182e}}body{{margin:0 !important}}</style>
 <script>
@@ -80,6 +110,24 @@ console.error = function() {{
 window.addEventListener('error', function(e) {{ meShowErr(e.message || e.error, e.error && e.error.stack); }});
 window.addEventListener('unhandledrejection', function(e) {{
   var r = e.reason || {{}}; meShowErr('UNHANDLED: ' + (r.message || r), r.stack);
+}});
+var CLICKS = {clicks};
+function meClickTarget(sel) {{
+  if (sel.indexOf('text=') === 0) {{
+    var text = sel.slice(5);
+    return Array.prototype.find.call(document.querySelectorAll('button'), function(b) {{
+      return b.textContent.indexOf(text) >= 0;
+    }});
+  }}
+  return document.querySelector(sel);
+}}
+window.addEventListener('load', function() {{
+  CLICKS.forEach(function(sel, i) {{
+    setTimeout(function() {{
+      var el = meClickTarget(sel);
+      if (el) {{ el.click(); }} else {{ meShowErr('harness: nothing matches ' + sel); }}
+    }}, 1200 + i * 400);
+  }});
 }});
 (function() {{
   var DATA = {data};
@@ -123,10 +171,10 @@ def free_port():
         return s.getsockname()[1]
 
 
-def write_preview():
+def write_preview(data=None, clicks=()):
     with open(POPUP_HTML, encoding="utf-8") as handle:
         html = handle.read()
-    inject = MOCK_SCRIPT.format(data=json.dumps(MOCK_DATA))
+    inject = MOCK_SCRIPT.format(data=json.dumps(data or MOCK_DATA), clicks=json.dumps(list(clicks)))
     html = html.replace('<script src="index.js" defer></script>',
                         inject + '\n        <script src="index.js" defer></script>')
     path = os.path.join(BUILD, "ui", "popup", PREVIEW_NAME)
@@ -156,14 +204,19 @@ def crop_popup(png_path, bg=(0x16, 0x18, 0x2e), pad=6):
         im = im.crop((max(0, left - pad), max(0, top - pad),
                       min(im.width, right + pad), min(im.height, bottom + pad)))
     out = png_path.replace(".png", "_crop.png")
-    im.resize((im.width * 2, im.height * 2), Image.LANCZOS).save(out)
+    im.resize((im.width * 2, im.height * 2), Image.Resampling.LANCZOS).save(out)
     return out
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--out", default="./shots", help="output directory (default: ./shots)")
     parser.add_argument("--wait", type=float, default=3.0, help="render wait before capture")
+    parser.add_argument("--scenario", choices=SCENARIOS, default="plain",
+                        help="mock settings: no themes / named themes / unsaved changes")
+    parser.add_argument("--click", action="append", default=[],
+                        help="CSS selector (or text=…) to click after render, in order; repeatable")
+    parser.add_argument("--name", default="popup_preview", help="output file stem")
     args = parser.parse_args()
 
     if not os.path.exists(POPUP_HTML):
@@ -171,12 +224,12 @@ def main():
 
     out = os.path.abspath(os.path.expanduser(args.out))
     os.makedirs(out, exist_ok=True)
-    preview = write_preview()
+    preview = write_preview(mock_data(args.scenario), args.click)
     port = free_port()
     httpd = serve(os.path.abspath(BUILD), port)
     try:
         url = f"http://127.0.0.1:{port}/ui/popup/{PREVIEW_NAME}"
-        shot = os.path.join(out, "popup_preview.png")
+        shot = os.path.join(out, f"{args.name}.png")
         time.sleep(0.3)
         result = subprocess.run(
             [os.path.expanduser("~/bin/foxmcp.screenshot"), url,

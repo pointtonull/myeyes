@@ -28,6 +28,15 @@ export const ChevronIcon = () => svg(
     <path d="M6 9.5l6 6 6-6" stroke-width="2.6" />,
 );
 
+export const CheckIcon = () => svg(
+    <path d="M5 12.5l4.5 4.5L19 7.5" stroke-width="2.6" />,
+);
+
+export const HomeIcon = () => svg([
+    <path d="M4 11l8-7 8 7" />,
+    <path d="M6 10v9h12v-9" />,
+]);
+
 export const FilterIcon = () => svg([
     <circle cx="9.5" cy="10" r="4.5" fill="#c084fc" opacity="0.8" />,
     <circle cx="14.5" cy="10" r="4.5" fill="#818cf8" opacity="0.8" />,

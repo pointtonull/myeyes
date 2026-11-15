@@ -210,6 +210,165 @@
         white-space: nowrap;
     }
     &__value-icon svg { display: block; height: 1.1rem; width: 1.1rem; }
+    &__value-name { white-space: nowrap; }
+    &__value--open { .me-glow(); }
+    &__anchor { position: relative; }
+}
+
+// --- Theme card + menus (named themes) -------------------------------------
+@me-muted: #8f8cc4;
+
+.me-theme {
+    display: flex;
+    position: relative;
+
+    > .me-card { flex: auto; min-width: 0; }
+}
+.me-card__icon { display: inline-block; position: relative; }
+.me-card__name {
+    display: inline-block;
+    max-width: 3.3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+    white-space: nowrap;
+}
+.me-card--open { .me-glow(); color: #fff; }
+.me-dot {
+    background: #f0abfc;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #f0abfc;
+    height: 0.5rem;
+    position: absolute;
+    right: -0.25rem;
+    top: -0.15rem;
+    width: 0.5rem;
+}
+
+.me-backdrop {
+    inset: 0;
+    position: fixed;
+    z-index: 10;
+}
+.me-menu {
+    backdrop-filter: blur(10px);
+    background: rgba(22, 24, 46, 0.97);
+    border: 1px solid rgba(124, 108, 240, 0.45);
+    border-radius: 0.9rem;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 16px rgba(124, 108, 240, 0.25);
+    max-height: 19rem;
+    overflow-y: auto;
+    padding: 0.35rem;
+    position: absolute;
+    right: 0;
+    text-align: left;
+    width: 14.5rem;
+    z-index: 11;
+
+    &--down { top: calc(100% + 0.4rem); }
+    &--up { bottom: calc(100% + 0.4rem); }
+
+    &__section + &__section {
+        border-top: 1px solid rgba(124, 108, 240, 0.18);
+        margin-top: 0.3rem;
+        padding-top: 0.3rem;
+    }
+    &__title {
+        color: @me-muted;
+        font-size: @size-text-small;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        overflow: hidden;
+        padding: 0.3rem 0.5rem 0.2rem;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    &__item {
+        align-items: center;
+        background: none;
+        border: none;
+        border-radius: 0.6rem;
+        color: @color-fore;
+        cursor: pointer;
+        display: flex;
+        font-size: @size-text-normal;
+        font-weight: 600;
+        gap: 0.4rem;
+        padding: 0.4rem 0.5rem;
+        text-align: left;
+        width: 100%;
+
+        &:hover { background: rgba(124, 108, 240, 0.18); color: #fff; }
+        &--checked { color: #fff; }
+        &--muted { color: @me-muted; }
+    }
+    &__check {
+        color: #38bdf8;
+        display: inline-flex;
+        flex: none;
+        width: 1rem;
+
+        svg { height: 1rem; width: 1rem; }
+    }
+    &__icon {
+        display: inline-flex;
+        flex: none;
+
+        svg { height: 1rem; width: 1rem; }
+    }
+    &__label {
+        flex: auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    &__count { color: @me-muted; font-size: @size-text-small; }
+    &__caret {
+        display: inline-flex;
+        transform: rotate(-90deg);
+        transition: transform @time-fast;
+
+        svg { height: 0.8rem; width: 0.8rem; }
+        &--open { transform: none; }
+    }
+    &__submenu {
+        border-left: 1px solid rgba(124, 108, 240, 0.25);
+        margin-left: 0.95rem;
+        padding-left: 0.2rem;
+    }
+    &__empty {
+        color: @me-muted;
+        font-size: @size-text-small;
+        padding: 0.4rem 0.5rem;
+    }
+    &__naming {
+        display: flex;
+        gap: 0.35rem;
+        padding: 0.3rem;
+    }
+    &__input {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(124, 108, 240, 0.5);
+        border-radius: 0.5rem;
+        color: #fff;
+        flex: auto;
+        font: inherit;
+        min-width: 0;
+        outline: none;
+        padding: 0.3rem 0.45rem;
+
+        &:focus { border-color: @me-accent; box-shadow: 0 0 8px rgba(124, 108, 240, 0.5); }
+    }
+    &__ok {
+        background: linear-gradient(135deg, #7c6cf0, #a855f7);
+        border: none;
+        border-radius: 0.5rem;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 0.3rem 0.6rem;
+    }
 }
 
 .app-switch {
