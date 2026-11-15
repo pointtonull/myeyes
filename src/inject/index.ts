@@ -9,6 +9,7 @@ import {writeEnabledForHost} from './cache';
 import {runDarkThemeDetector, stopDarkThemeDetector} from './detector';
 import {createOrUpdateDynamicTheme, removeDynamicTheme, cleanDynamicThemeCache} from './dynamic-theme';
 import {collectCSS} from './dynamic-theme/css-collection';
+import {showOSD} from './osd';
 import {createOrUpdateStyle, removeStyle} from './style';
 import {createOrUpdateSVGFilter, removeSVGFilter} from './svg-filter';
 import {logWarn, logInfoCollapsed} from './utils/log';
@@ -165,6 +166,9 @@ function onMessage(message: MessageBGtoCS | MessageUItoCS | DebugMessageBGtoCS) 
         }
         case MessageTypeUItoCS.EXPORT_CSS:
             collectCSS().then((collectedCSS) => sendMessage({type: MessageTypeCStoUI.EXPORT_CSS_RESPONSE, data: collectedCSS}));
+            break;
+        case MessageTypeBGtoCS.SHOW_OSD:
+            showOSD(message.data);
             break;
         case MessageTypeBGtoCS.UNSUPPORTED_SENDER:
         case MessageTypeBGtoCS.CLEAN_UP:

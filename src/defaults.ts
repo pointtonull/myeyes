@@ -83,6 +83,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
         };
     }),
     defaultThemeId: 'default', // utils/named-themes DEFAULT_THEME_ID: the built-in `theme`
+    siteTweaks: [],
     enabledByDefault: true,
     enabledFor: [],
     disabledFor: [],

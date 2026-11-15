@@ -7,6 +7,7 @@ import {Overlay} from '../../controls';
 import {openExtensionPage} from '../../utils';
 import {SettingsIcon} from '../../icons';
 import MainPage from '../main-page';
+import {ResetButton} from '../main-page/reset-button';
 import {Page, PageViewer} from '../page-viewer';
 import ThemePage from '../theme/page';
 
@@ -111,7 +112,7 @@ export default function Body(props: ViewProps) {
             }}
         >
             <header class="m-section m-header">
-                <span class="m-header__side" />
+                <ResetButton {...props} />
                 <Logo />
                 <button class="m-header__side m-header__gear" onclick={() => openExtensionPage('options')} aria-label="Settings">
                     <SettingsIcon />

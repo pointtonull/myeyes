@@ -144,6 +144,17 @@ export function validateSettings(settings: Partial<UserSettings>): SettingValida
 
     validateProperty(settings, 'defaultThemeId', isNonEmptyString, DEFAULT_SETTINGS);
 
+    validateProperty(settings, 'siteTweaks', isArray, DEFAULT_SETTINGS);
+    validateArray(settings, 'siteTweaks', (tweak: CustomSiteConfig) => {
+        if (!(isPlainObject(tweak) && hasRequiredProperties(tweak, ['url', 'theme']))) {
+            return false;
+        }
+        const tweakValidator = createValidator();
+        tweakValidator.validateProperty(tweak, 'url', isNonEmptyArrayOfNonEmptyStrings, tweak);
+        tweakValidator.validateProperty(tweak, 'theme', isValidPresetTheme, tweak);
+        return tweakValidator.errors.length === 0;
+    });
+
     validateProperty(settings, 'enabledFor', isArray, DEFAULT_SETTINGS);
     validateArray(settings, 'enabledFor', isNonEmptyString);
     validateProperty(settings, 'disabledFor', isArray, DEFAULT_SETTINGS);

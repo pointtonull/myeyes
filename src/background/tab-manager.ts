@@ -527,4 +527,18 @@ export default class TabManager {
     static async getActiveTabURL(): Promise<string> {
         return TabManager.getTabURL(await getActiveTab());
     }
+
+    /**
+     * MyEyes!: show the on-screen confirmation in the tab's top frame. False
+     * when no MyEyes content script runs there (protected / unloaded page).
+     */
+    static showOSD(tabId: number, data: {title: string; detail?: string}): boolean {
+        const frame = TabManager.tabs[tabId]?.[0];
+        if (!frame) {
+            return false;
+        }
+        const message: MessageBGtoCS = {type: MessageTypeBGtoCS.SHOW_OSD, data, scriptId: frame.scriptId};
+        TabManager.sendDocumentMessage(tabId, frame.documentId!, message, 0);
+        return true;
+    }
 }

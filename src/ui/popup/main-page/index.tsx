@@ -1,7 +1,9 @@
 import {m} from 'malevic';
 
 import type {ViewProps} from '../../../definitions';
-import {customizeSite, pickSiteEngine, siteMode} from '../../../utils/named-themes';
+import {customizeSite, hasSiteTweaks, pickSiteEngine, siteMode} from '../../../utils/named-themes';
+import {SITE_ENABLE_LABELS, getSiteEnableMode, setSiteEnableMode} from '../../../utils/site-enable';
+import type {SiteEnableMode} from '../../../utils/site-enable';
 import {getURLHostOrProtocol, isURLEnabled} from '../../../utils/url';
 import {Slider} from '../../controls';
 import {formatPercent} from '../theme/controls/format';
@@ -20,31 +22,36 @@ import {DefaultMenu, ThemeMenu} from './theme-menus';
 
 const MASCOT = '../assets/images/myeyes-mascot.png';
 
+// Per-site Disabled / Auto / Enabled (utils/site-enable); Auto is every
+// site's default: darken unless the page is already dark.
+const PILLS: Array<{mode: SiteEnableMode; icon: KitIconName; title: string}> = [
+    {mode: 'disabled', icon: 'mode-disabled', title: 'Never darken this site'},
+    {mode: 'auto', icon: 'mode-auto', title: 'Darken this site unless the page is already dark'},
+    {mode: 'enabled', icon: 'mode-enabled', title: 'Always darken this site, even if it is already dark'},
+];
+
 function EnablePills(props: ViewProps & {isPageEnabled: boolean}) {
-    function set(enabled: boolean) {
-        if (enabled !== props.isPageEnabled) {
-            props.actions.toggleActiveTab();
-        }
-    }
+    const {settings, activeTab} = props.data;
+    const url = activeTab.url;
+    const host = getURLHostOrProtocol(url);
+    const current = getSiteEnableMode(settings, url);
+    const hint = keyHint(props, 'addSite');
 
     return (
         <div class="me-pills">
-            <button
-                class={{'me-pill': true, 'me-pill--disabled': true, 'me-pill--active': !props.isPageEnabled}}
-                title={`MyEyes off for this site${keyHint(props, 'addSite')}`}
-                onclick={() => set(false)}
-            >
-                <span class="me-pill__icon"><KitIcon name="mode-disabled" /></span>
-                <span class="me-pill__label">Disabled</span>
-            </button>
-            <button
-                class={{'me-pill': true, 'me-pill--enabled': true, 'me-pill--active': props.isPageEnabled}}
-                title={`MyEyes on for this site${keyHint(props, 'addSite')}`}
-                onclick={() => set(true)}
-            >
-                <span class="me-pill__icon"><KitIcon name="mode-enabled" /></span>
-                <span class="me-pill__label">Enabled</span>
-            </button>
+            {PILLS.map(({mode, icon, title}) => (
+                <button
+                    class={{'me-pill': true, [`me-pill--${mode}`]: true, 'me-pill--active': current === mode}}
+                    title={`${title}${hint ? ` · toggle${hint}` : ''}`}
+                    onclick={() => current !== mode && props.actions.changeSettings(setSiteEnableMode(settings, url, host, mode))}
+                >
+                    <span class="me-pill__icon"><KitIcon name={icon} /></span>
+                    <span class="me-pill__label">{SITE_ENABLE_LABELS[mode]}</span>
+                    {mode === 'auto' && current === 'auto' ? (
+                        <span class="me-pill__sub">{props.isPageEnabled ? 'darkening' : 'already dark'}</span>
+                    ) : null}
+                </button>
+            ))}
         </div>
     );
 }
@@ -68,6 +75,8 @@ function ModeCards(props: ViewProps) {
     const host = getURLHostOrProtocol(url);
     const current = siteMode(settings, url);
     const isCustom = current.card === 'custom';
+    // tweaks parked while another card/theme is active: the Custom card brings them back
+    const parked = !isCustom && hasSiteTweaks(settings, url);
     return (
         <Array>
             {MODES.map((mode) => (
@@ -82,9 +91,11 @@ function ModeCards(props: ViewProps) {
             <ModeCard
                 icon="custom"
                 label="Custom"
-                sub={isCustom ? engineLabel(current.engine) : undefined}
+                sub={isCustom ? engineLabel(current.engine) : parked ? 'restore' : undefined}
                 active={isCustom}
-                title={isCustom ? `${host} has its own settings` : `Give ${host} its own settings (or just move a slider)`}
+                title={isCustom ? `${host} has its own settings` : parked
+                    ? `Bring back ${host}'s own settings (kept while you try others)`
+                    : `Give ${host} its own settings (or just move a slider)`}
                 onclick={() => props.actions.changeSettings(customizeSite(settings, url, host))}
             />
         </Array>

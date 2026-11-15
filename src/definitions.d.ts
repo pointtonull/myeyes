@@ -105,6 +105,8 @@ export interface UserSettings {
     theme: Theme;
     presets: ThemePreset[];
     customThemes: CustomSiteConfig[];
+    /** MyEyes!: a site's Custom tweaks parked while another engine/theme is active (see utils/named-themes). */
+    siteTweaks: CustomSiteConfig[];
     /** MyEyes!: theme for sites without one of their own — 'default' (built-in) or a preset id. */
     defaultThemeId: string;
     enabledByDefault: boolean;

@@ -36,36 +36,48 @@
     img { height: 0.8rem; width: 0.8rem; }
 }
 
+// Disabled / Auto / Enabled for the current site
 .me-pills {
     display: grid;
     flex: auto;
-    gap: 0.5rem;
-    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+    grid-template-columns: repeat(3, 1fr);
+    min-width: 0;
 }
 .me-pill {
     .me-glass();
     align-items: center;
-    border-radius: 1rem;
+    border-radius: 0.9rem;
     color: @color-fore;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
-    padding: 0.6rem 0.4rem;
+    justify-content: center;
+    min-width: 0;
+    padding: 0.55rem 0.15rem;
 
     // kit glasses sit in a square 64x64 canvas: crop the empty top/bottom
     &__icon img {
         display: block;
-        height: 1.9rem;
+        height: 1.55rem;
         object-fit: cover;
-        width: 3.4rem;
+        width: 2.8rem;
     }
     &__label {
-        font-size: @size-text-large;
+        font-size: @size-text-normal;
         font-weight: 700;
     }
+    &__sub {
+        font-size: @size-text-small;
+        line-height: 1;
+        margin-top: -0.1rem;
+        opacity: 0.85;
+        white-space: nowrap;
+    }
 }
-.me-pill--enabled.me-pill--active {
+.me-pill--enabled.me-pill--active,
+.me-pill--auto.me-pill--active {
     .me-glow();
     color: #fff;
     .me-pill__icon img { filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.6)); }
@@ -504,5 +516,54 @@
         -moz-user-select: none;
         user-select: none;
         width: 100%;
+    }
+}
+
+// Header reset button (left), a round glass twin of the gear (right). The
+// first click arms it (pink + "Reset?"), the second resets the site.
+.me-reset-wrap {
+    display: flex;
+    position: relative;
+}
+.me-reset {
+    align-items: center;
+    background: rgba(152, 96, 245, 0.12);
+    border: 1px solid rgba(152, 96, 245, 0.4);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(152, 96, 245, 0.3);
+    cursor: pointer;
+    display: flex;
+    height: 2rem;
+    justify-content: center;
+    padding: 0;
+    width: 2rem;
+
+    img {
+        height: 1.05rem;
+        width: 1.05rem;
+    }
+
+    &:disabled {
+        box-shadow: none;
+        cursor: default;
+        opacity: 0.35;
+    }
+
+    &--armed {
+        background: rgba(239, 85, 237, 0.18);
+        border-color: #ef55ed;
+        box-shadow: 0 0 10px rgba(239, 85, 237, 0.45);
+    }
+
+    &__confirm {
+        color: #ef55ed;
+        font-size: @size-text-small;
+        font-weight: 700;
+        left: calc(100% + 0.35rem);
+        pointer-events: none;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        white-space: nowrap;
     }
 }

@@ -5,11 +5,12 @@ import {getLocalMessage} from '../../../utils/locales';
 import {ControlGroup, Shortcut} from '../../controls';
 
 // MyEyes!: all four keyboard commands are listed (and rebindable) here, not
-// only upstream's toggle/addSite.
+// only upstream's toggle/addSite. The first two are bound by default; the
+// others are one click away.
 const HOTKEYS: Array<{command: Command; description: string}> = [
-    {command: 'toggle', description: 'Enable/disable the extension'},
-    {command: 'addSite', description: 'Toggle the current website'},
+    {command: 'addSite', description: 'Toggle the current website (on / off, back to Auto)'},
     {command: 'cycleSiteTheme', description: 'Next theme for the current website'},
+    {command: 'toggle', description: 'Enable/disable the extension on all sites'},
     {command: 'cycleDefaultTheme', description: 'Next default theme for new sites'},
 ];
 

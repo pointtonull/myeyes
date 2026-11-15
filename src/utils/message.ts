@@ -33,6 +33,7 @@ export enum MessageTypeBGtoCS {
     ADD_SVG_FILTER = 'bg-cs-add-svg-filter',
     CLEAN_UP = 'bg-cs-clean-up',
     FETCH_RESPONSE = 'bg-cs-fetch-response',
+    SHOW_OSD = 'bg-cs-show-osd', // MyEyes!: on-screen confirmation of a keyboard command
     UNSUPPORTED_SENDER = 'bg-cs-unsupported-sender'
 }
 

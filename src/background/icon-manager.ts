@@ -84,6 +84,20 @@ export default class IconManager {
         IconManager.handleUpdate();
     }
 
+    /**
+     * MyEyes!: a short-lived per-tab badge confirming a keyboard command,
+     * for pages where the on-screen confirmation can't be shown.
+     */
+    static flashBadge(tabId: number, text: string, ms = 1500): void {
+        if (__THUNDERBIRD__ || !chrome.browserAction.setBadgeText) {
+            return;
+        }
+        const swallow = () => void chrome.runtime.lastError;
+        chrome.browserAction.setBadgeBackgroundColor({tabId, color: '#9860f5'}, swallow);
+        chrome.browserAction.setBadgeText({tabId, text}, swallow);
+        setTimeout(() => chrome.browserAction.setBadgeText({tabId, text: ''}, swallow), ms);
+    }
+
     static hideBadge(): void {
         IconManager.iconState.badgeText = '';
         chrome.browserAction.setBadgeText({text: ''});

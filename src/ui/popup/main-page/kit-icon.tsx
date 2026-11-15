@@ -7,7 +7,7 @@ import {m} from 'malevic';
 export type KitIconName = (
     'ai-enhance' | 'brightness' | 'check' | 'chevron-down' | 'clean-up' |
     'contrast' | 'custom' | 'dynamic' | 'filter-plus' | 'heart-puzzle' |
-    'home' | 'mode-ai' | 'mode-disabled' | 'mode-enabled' | 'reset' |
+    'home' | 'mode-ai' | 'mode-auto' | 'mode-disabled' | 'mode-enabled' | 'reset' |
     'saturation' | 'sepia' | 'theme'
 );
 

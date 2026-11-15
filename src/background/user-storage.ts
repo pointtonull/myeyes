@@ -32,6 +32,9 @@ export default class UserStorage {
         settings.customThemes.forEach((site) => {
             site.theme = {...DEFAULT_THEME, ...site.theme};
         });
+        (settings.siteTweaks || []).forEach((site) => {
+            site.theme = {...DEFAULT_THEME, ...site.theme};
+        });
         if (settings.customThemes.length === 0) {
             settings.customThemes = DEFAULT_SETTINGS.customThemes;
         }

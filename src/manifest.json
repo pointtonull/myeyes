@@ -47,12 +47,6 @@
         "contextMenus"
     ],
     "commands": {
-        "toggle": {
-            "suggested_key": {
-                "default": "Alt+Shift+D"
-            },
-            "description": "__MSG_toggle_extension__"
-        },
         "addSite": {
             "suggested_key": {
                 "default": "Alt+Shift+A"
@@ -65,10 +59,10 @@
             },
             "description": "__MSG_cycle_site_theme__"
         },
+        "toggle": {
+            "description": "__MSG_toggle_extension__"
+        },
         "cycleDefaultTheme": {
-            "suggested_key": {
-                "default": "Alt+Shift+N"
-            },
             "description": "__MSG_cycle_default_theme__"
         },
         "switchEngine": {

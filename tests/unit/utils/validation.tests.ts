@@ -98,6 +98,10 @@ test('Settings Validation', () => {
             null,
         ],
         defaultThemeId: '',
+        siteTweaks: [
+            {url: [], theme: DEFAULT_THEME},
+            {url: ['a.com']},
+        ],
         disabledFor: ['a.com', '', 'b.com'],
         enabledFor: {0: 'a.com', 1: 'b.com'},
         enabledByDefault: true,
@@ -187,6 +191,9 @@ test('Settings Validation', () => {
             {url: ['a.com'], theme: {brightness: 100} as Theme},
         ],
         defaultThemeId: 'p5',
+        siteTweaks: [
+            {url: ['a.com'], baseId: 'p5', theme: {brightness: 90} as Theme},
+        ],
         disabledFor: ['a.com', 'b.com'],
         enabledFor: ['c.com'],
         enabledByDefault: false,

@@ -3,13 +3,18 @@ import type {ThemePreset} from '../../../src/definitions';
 import {
     DEFAULT_THEME_ID,
     assignSiteTheme,
+    canResetSite,
     customizeSite,
+    defaultThemeLabel,
     deleteNamedTheme,
     editSiteTheme,
+    hasSiteTweaks,
     nextDefaultTheme,
     nextSiteTheme,
     pickSiteEngine,
+    resetSite,
     siteMode,
+    siteThemeLabel,
     getDefaultTheme,
     renameNamedTheme,
     resolveSiteTheme,
@@ -249,12 +254,14 @@ describe('Dynamic / Filter+ cards: a plain engine for the site', () => {
         expect(siteMode(after, OTHER_URL)).toEqual({card: 'engine', engine: ThemeEngine.dynamicTheme});
     });
 
-    it('replaces tweaks and unpins a saved theme', () => {
+    it('unpins a saved theme and parks the tweaks instead of dropping them', () => {
         let settings = makeSettings({presets: [night()]});
         settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 120}));
         const after = apply(settings, pickSiteEngine(settings, NIGHT_URL, 'night.example', ThemeEngine.dynamicTheme));
         expect(after.presets[0].urls).toEqual([]);
         expect(resolveSiteTheme(after, NIGHT_URL).source).toBe('default');
+        expect(after.siteTweaks).toEqual([expect.objectContaining({baseId: 'night', theme: expect.objectContaining({contrast: 120})})]);
+        expect(hasSiteTweaks(after, NIGHT_URL)).toBe(true);
     });
 
     it('stays explicit when the default is a named theme', () => {
@@ -301,6 +308,106 @@ describe('Custom card: the site gets its own settings', () => {
     });
 });
 
+describe('tweaks are never lost by navigating: parked, then restored', () => {
+    function tweaked() {
+        const settings = makeSettings({presets: [night([])]});
+        return apply(settings, editSiteTheme(settings, OTHER_URL, 'other.example', {brightness: 70}));
+    }
+
+    for (const [how, leave] of [
+        ['picking an engine card', (s: ThemeSettings) => pickSiteEngine(s, OTHER_URL, 'other.example', ThemeEngine.cssFilter)],
+        ['picking a saved theme', (s: ThemeSettings) => assignSiteTheme(s, OTHER_URL, 'other.example', 'night')],
+        ['following the default', (s: ThemeSettings) => assignSiteTheme(s, OTHER_URL, 'other.example', DEFAULT_THEME_ID)],
+        ['the keyboard cycle', (s: ThemeSettings) => nextSiteTheme(s, OTHER_URL, 'other.example')],
+    ] as const) {
+        it(`${how} parks them; the Custom card brings them back`, () => {
+            let settings = apply(tweaked(), leave(tweaked()));
+            expect(siteMode(settings, OTHER_URL).card).not.toBe('custom');
+            expect(settings.siteTweaks).toHaveLength(1);
+
+            settings = apply(settings, customizeSite(settings, OTHER_URL, 'other.example'));
+            expect(siteMode(settings, OTHER_URL).card).toBe('custom');
+            expect(resolveSiteTheme(settings, OTHER_URL).theme.brightness).toBe(70);
+            expect(settings.siteTweaks).toEqual([]);
+        });
+    }
+
+    it('a fork of a saved theme comes back with its unsaved mark', () => {
+        let settings = makeSettings({presets: [night()]});
+        settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 120}));
+        settings = apply(settings, pickSiteEngine(settings, NIGHT_URL, 'night.example', ThemeEngine.cssFilter));
+        settings = apply(settings, customizeSite(settings, NIGHT_URL, 'night.example'));
+        expect(resolveSiteTheme(settings, NIGHT_URL)).toMatchObject({source: 'fork', themeId: 'night', modified: true});
+    });
+
+    it('a site keeps one set: tweaking afresh from another card replaces the parked one', () => {
+        let settings = tweaked();
+        settings = apply(settings, pickSiteEngine(settings, OTHER_URL, 'other.example', ThemeEngine.cssFilter));
+        settings = apply(settings, editSiteTheme(settings, OTHER_URL, 'other.example', {sepia: 30}));
+        expect(settings.siteTweaks).toEqual([]);
+        expect(resolveSiteTheme(settings, OTHER_URL).theme).toMatchObject({engine: ThemeEngine.cssFilter, sepia: 30});
+    });
+
+    it('parked tweaks of other sites are untouched', () => {
+        let settings = tweaked();
+        settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 130}));
+        settings = apply(settings, pickSiteEngine(settings, OTHER_URL, 'other.example', ThemeEngine.cssFilter));
+        settings = apply(settings, pickSiteEngine(settings, NIGHT_URL, 'night.example', ThemeEngine.cssFilter));
+        expect(settings.siteTweaks).toHaveLength(2);
+        settings = apply(settings, customizeSite(settings, NIGHT_URL, 'night.example'));
+        expect(settings.siteTweaks!.map((t) => t.url)).toEqual([['other.example']]);
+    });
+
+    it('deleting a theme turns its parked forks into plain tweaks', () => {
+        let settings = makeSettings({presets: [night()]});
+        settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 120}));
+        settings = apply(settings, pickSiteEngine(settings, NIGHT_URL, 'night.example', ThemeEngine.cssFilter));
+        settings = apply(settings, deleteNamedTheme(settings, 'night'));
+        expect(settings.siteTweaks![0].baseId).toBeUndefined();
+    });
+});
+
+describe('Reset: a clean slate for the site', () => {
+    it('drops tweaks (parked too), engine pick and saved theme; the site follows the default', () => {
+        let settings = makeSettings({presets: [night()]});
+        settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 120}));
+        settings = apply(settings, pickSiteEngine(settings, NIGHT_URL, 'night.example', ThemeEngine.cssFilter));
+        expect(canResetSite(settings, NIGHT_URL)).toBe(true);
+        settings = apply(settings, resetSite(settings, NIGHT_URL));
+        expect(settings).toMatchObject({customThemes: [], siteTweaks: []});
+        expect(settings.presets[0].urls).toEqual([]);
+        expect(resolveSiteTheme(settings, NIGHT_URL).source).toBe('default');
+        expect(hasSiteTweaks(settings, NIGHT_URL)).toBe(false);
+        expect(canResetSite(settings, NIGHT_URL)).toBe(false);
+    });
+
+    it('keeps built-in site fixes and other sites', () => {
+        const builtIn = {url: ['docs.google.com'], theme: {...DEFAULT_THEME, engine: ThemeEngine.cssFilter}, builtIn: true};
+        let settings = makeSettings({customThemes: [builtIn]});
+        expect(canResetSite(settings, 'https://docs.google.com/')).toBe(false);
+        settings = apply(settings, editSiteTheme(settings, OTHER_URL, 'other.example', {brightness: 70}));
+        settings = apply(settings, resetSite(settings, 'https://docs.google.com/'));
+        expect(settings.customThemes).toHaveLength(2);
+    });
+});
+
+describe('labels (keyboard OSD)', () => {
+    it('names what the site shows, in the pane\'s words', () => {
+        let settings = makeSettings({presets: [night([]), {...night([]), id: 'sepia', name: 'Sepia'}]});
+        expect(siteThemeLabel(settings, OTHER_URL)).toBe('Dynamic');
+        settings = apply(settings, pickSiteEngine(settings, OTHER_URL, 'other.example', ThemeEngine.cssFilter));
+        expect(siteThemeLabel(settings, OTHER_URL)).toBe('Filter+');
+        settings = apply(settings, assignSiteTheme(settings, OTHER_URL, 'other.example', 'night'));
+        expect(siteThemeLabel(settings, OTHER_URL)).toBe('Night');
+        settings = apply(settings, editSiteTheme(settings, OTHER_URL, 'other.example', {sepia: 10}));
+        expect(siteThemeLabel(settings, OTHER_URL)).toBe('Custom');
+        settings = apply(settings, {defaultThemeId: 'sepia'});
+        expect(siteThemeLabel(settings, 'https://new.example/')).toBe('Default · Sepia');
+        expect(defaultThemeLabel(settings)).toBe('Sepia');
+        expect(defaultThemeLabel(makeSettings())).toBe('Dynamic');
+    });
+});
+
 describe('keyboard: next theme for this site', () => {
     const sepia = (): ThemePreset => ({...night([]), id: 'sepia', name: 'Sepia'});
 
@@ -326,11 +433,16 @@ describe('keyboard: next theme for this site', () => {
         expect(seen).toEqual([ThemeEngine.dynamicTheme, ThemeEngine.cssFilter, 'Night', 'follow', ThemeEngine.dynamicTheme]);
     });
 
-    it('moving on drops unsaved tweaks (same as picking from the cards)', () => {
-        let settings = makeSettings({presets: [night()]});
-        settings = apply(settings, editSiteTheme(settings, NIGHT_URL, 'night.example', {contrast: 120}));
-        settings = apply(settings, nextSiteTheme(settings, NIGHT_URL, 'night.example'));
-        expect(settings.customThemes.some((c) => c.baseId)).toBe(false);
+    it('a site with tweaks gets a Custom stop, in card order, that restores them', () => {
+        let settings = makeSettings({presets: [night([])]});
+        settings = apply(settings, editSiteTheme(settings, OTHER_URL, 'other.example', {brightness: 70}));
+        const seen: string[] = [];
+        for (let i = 0; i < 4; i++) {
+            settings = apply(settings, nextSiteTheme(settings, OTHER_URL, 'other.example'));
+            seen.push(siteThemeLabel(settings, OTHER_URL));
+        }
+        expect(seen).toEqual(['Night', 'Dynamic', 'Filter+', 'Custom']);
+        expect(resolveSiteTheme(settings, OTHER_URL).theme.brightness).toBe(70);
     });
 });
 

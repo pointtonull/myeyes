@@ -21,6 +21,11 @@ import {isURLInList, isURLMatched} from './url';
  * - A site that just uses a plain engine (picked on the Dynamic / Filter+
  *   card) is a `customThemes` entry with `kind: 'engine'`: the built-in theme
  *   with that engine. Tweaking it turns it into a fork of the built-in.
+ * - Tweaks are never lost by navigating: picking another card, theme or
+ *   cycling with the keyboard PARKS the site's own tweaks in `siteTweaks`,
+ *   and the Custom card (or the cycle's Custom stop) brings them back. A site
+ *   keeps one set of tweaks: tweaking afresh from another card replaces the
+ *   parked set. Only Reset (clean slate) and the Theme menu's Revert discard.
  *
  * The pane's cards show where a site's look comes from (siteMode): a plain
  * engine, Custom (its own tweaks), or a saved Theme.
@@ -31,7 +36,9 @@ import {isURLInList, isURLMatched} from './url';
 export const DEFAULT_THEME_ID = 'default';
 export const DEFAULT_THEME_NAME = 'Default';
 
-export type ThemeSettings = Pick<UserSettings, 'theme' | 'presets' | 'customThemes' | 'defaultThemeId'>;
+export type ThemeSettings = Pick<UserSettings, 'theme' | 'presets' | 'customThemes' | 'defaultThemeId'> & {
+    siteTweaks?: CustomSiteConfig[];
+};
 export type ThemePatch = Partial<ThemeSettings>;
 
 export interface NamedTheme {
@@ -64,14 +71,35 @@ function findSiteCustom(settings: ThemeSettings, url: string): CustomSiteConfig 
     return settings.customThemes.find(({url: list}) => isURLInList(url, list));
 }
 
-/** A plain-engine entry becomes a fork of the built-in theme once the user tweaks it. */
+/** The site's own tweaks (a fork or a user custom theme), as opposed to a plain-engine pick or a built-in fix. */
+function isOwnTweaks(custom: CustomSiteConfig): boolean {
+    return custom.kind !== 'engine' && !custom.builtIn;
+}
+
+/** Once the user tweaks an entry it is theirs: a plain-engine pick becomes a fork of the built-in theme. */
 function asFork(custom: CustomSiteConfig): CustomSiteConfig {
-    if (custom.kind !== 'engine') {
+    if (isOwnTweaks(custom)) {
         return custom;
     }
-    const fork: CustomSiteConfig = {...custom, baseId: DEFAULT_THEME_ID};
+    const fork: CustomSiteConfig = {...custom};
+    if (fork.kind === 'engine') {
+        fork.baseId = DEFAULT_THEME_ID;
+    }
     delete fork.kind;
+    delete fork.builtIn;
     return fork;
+}
+
+function parkedTweaks(settings: ThemeSettings): CustomSiteConfig[] {
+    return settings.siteTweaks || [];
+}
+
+function findParked(settings: ThemeSettings, url: string): CustomSiteConfig | undefined {
+    return parkedTweaks(settings).find(({url: list}) => isURLInList(url, list));
+}
+
+function withoutParked(settings: ThemeSettings, url: string): CustomSiteConfig[] {
+    return parkedTweaks(settings).filter(({url: list}) => !isURLInList(url, list));
 }
 
 /** Drop the site's custom/forked theme and unpin it from every named theme. */
@@ -82,6 +110,16 @@ function withoutSite(settings: ThemeSettings, url: string): Required<Pick<ThemeP
             ...preset,
             urls: preset.urls.filter((template) => !isURLMatched(url, template)),
         })),
+    };
+}
+
+/** Like withoutSite, but the site's own tweaks are parked (restorable from the Custom card), not lost. */
+function leaveSite(settings: ThemeSettings, url: string): Required<Pick<ThemePatch, 'customThemes' | 'presets' | 'siteTweaks'>> {
+    const custom = findSiteCustom(settings, url);
+    const parkThis = custom && isOwnTweaks(custom);
+    return {
+        ...withoutSite(settings, url),
+        siteTweaks: parkThis ? withoutParked(settings, url).concat(custom!) : parkedTweaks(settings),
     };
 }
 
@@ -146,11 +184,11 @@ export function siteMode(settings: ThemeSettings, url: string): SiteMode {
 
 /**
  * Dynamic / Filter+ card: the site uses a plain engine — the built-in theme
- * with that engine. Replaces any tweaks, custom theme or pinned theme; when
+ * with that engine. Unpins a saved theme and parks the site's tweaks; when
  * that is exactly what the default already gives, the site just follows it.
  */
 export function pickSiteEngine(settings: ThemeSettings, url: string, host: string, engine: Theme['engine']): ThemePatch {
-    const cleared = withoutSite(settings, url);
+    const cleared = leaveSite(settings, url);
     const defaultIsPlain = getDefaultTheme(settings).id === DEFAULT_THEME_ID && settings.theme.engine === engine;
     if (defaultIsPlain) {
         return cleared;
@@ -161,25 +199,47 @@ export function pickSiteEngine(settings: ThemeSettings, url: string, host: strin
     };
 }
 
-/** Custom card: start customizing this site — fork its current look (no-op if it already has its own). */
+/** The site has tweaks of its own: in use now, or parked while another card/theme is active. */
+export function hasSiteTweaks(settings: ThemeSettings, url: string): boolean {
+    const custom = findSiteCustom(settings, url);
+    return Boolean((custom && isOwnTweaks(custom)) || findParked(settings, url));
+}
+
+/**
+ * Custom card: the site's own tweaks — brings back parked ones, else starts
+ * customizing by forking its current look (no-op if it already has its own).
+ */
 export function customizeSite(settings: ThemeSettings, url: string, host: string): ThemePatch {
     const custom = findSiteCustom(settings, url);
+    if (custom && isOwnTweaks(custom)) {
+        return {};
+    }
+    const parked = findParked(settings, url);
+    if (parked) {
+        return {
+            customThemes: settings.customThemes.filter((c) => c !== custom).concat(parked),
+            siteTweaks: withoutParked(settings, url),
+        };
+    }
     if (custom) {
-        if (custom.kind !== 'engine') {
-            return {};
-        }
-        return {customThemes: settings.customThemes.map((c) => (c === custom ? asFork(c) : c))};
+        return custom.kind === 'engine' ? {customThemes: settings.customThemes.map((c) => (c === custom ? asFork(c) : c))} : {};
     }
     const site = resolveSiteTheme(settings, url);
     return {customThemes: settings.customThemes.concat({url: [host], theme: {...site.theme}, baseId: site.themeId})};
 }
 
-/** Apply a theme change to the site only: edit its fork/custom theme, or fork its current theme. */
+/**
+ * Apply a theme change to the site only: edit its fork/custom theme, or fork
+ * its current theme. Tweaking afresh (from a plain engine or a saved theme)
+ * starts the site's one set of tweaks over, so a parked set is replaced.
+ */
 export function editSiteTheme(settings: ThemeSettings, url: string, host: string, change: Partial<Theme>): ThemePatch {
     const custom = findSiteCustom(settings, url);
+    const siteTweaks = withoutParked(settings, url);
     if (custom) {
         return {
             customThemes: settings.customThemes.map((c) => (c === custom ? {...asFork(c), theme: {...c.theme, ...change}} : c)),
+            ...(isOwnTweaks(custom) ? {} : {siteTweaks}),
         };
     }
     const site = resolveSiteTheme(settings, url);
@@ -189,7 +249,25 @@ export function editSiteTheme(settings: ThemeSettings, url: string, host: string
             theme: {...site.theme, ...change},
             baseId: site.themeId,
         }),
+        siteTweaks,
     };
+}
+
+/** Reset: a clean slate — drop the site's tweaks (parked too), its engine pick and saved theme; it follows the default. */
+export function resetSite(settings: ThemeSettings, url: string): ThemePatch {
+    const {presets} = withoutSite(settings, url);
+    return {
+        customThemes: settings.customThemes.filter((c) => c.builtIn || !isURLInList(url, c.url)),
+        presets,
+        siteTweaks: withoutParked(settings, url),
+    };
+}
+
+/** Whether Reset would change anything for the site. */
+export function canResetSite(settings: ThemeSettings, url: string): boolean {
+    return settings.customThemes.some((c) => !c.builtIn && isURLInList(url, c.url)) ||
+        settings.presets.some(({urls}) => isURLInList(url, urls)) ||
+        Boolean(findParked(settings, url));
 }
 
 /** "Save": write the site's unsaved changes back into the theme they were forked from. */
@@ -225,9 +303,12 @@ export function revertSiteTheme(settings: ThemeSettings, url: string): ThemePatc
     return {customThemes: settings.customThemes.filter((c) => c !== custom)};
 }
 
-/** Pin the site to a named theme; DEFAULT_THEME_ID (or an unknown id) makes it follow the default. */
+/**
+ * Pin the site to a named theme; DEFAULT_THEME_ID (or an unknown id) makes it
+ * follow the default. The site's tweaks are parked, not lost.
+ */
 export function assignSiteTheme(settings: ThemeSettings, url: string, host: string, themeId: string): ThemePatch {
-    const cleared = withoutSite(settings, url);
+    const cleared = leaveSite(settings, url);
     if (!settings.presets.some((p) => p.id === themeId)) {
         return cleared;
     }
@@ -256,17 +337,21 @@ export function deleteNamedTheme(settings: ThemeSettings, id: string): ThemePatc
     if (!settings.presets.some((p) => p.id === id)) {
         return {};
     }
+    const unfork = (c: CustomSiteConfig) => {
+        if (c.baseId !== id) {
+            return c;
+        }
+        const plain = {...c};
+        delete plain.baseId;
+        return plain;
+    };
     const patch: ThemePatch = {
         presets: settings.presets.filter((p) => p.id !== id),
-        customThemes: settings.customThemes.map((c) => {
-            if (c.baseId !== id) {
-                return c;
-            }
-            const plain = {...c};
-            delete plain.baseId;
-            return plain;
-        }),
+        customThemes: settings.customThemes.map(unfork),
     };
+    if (parkedTweaks(settings).some((c) => c.baseId === id)) {
+        patch.siteTweaks = parkedTweaks(settings).map(unfork);
+    }
     if (settings.defaultThemeId === id) {
         patch.defaultThemeId = DEFAULT_THEME_ID;
     }
@@ -291,6 +376,7 @@ export function suggestThemeName(settings: ThemeSettings, base: string): string 
 type CycleChoice =
     | {kind: 'follow'}
     | {kind: 'engine'; engine: Theme['engine']}
+    | {kind: 'custom'}
     | {kind: 'theme'; id: string};
 
 const CYCLE_ENGINES: Array<Theme['engine']> = [ThemeEngine.dynamicTheme, ThemeEngine.cssFilter];
@@ -300,11 +386,12 @@ function cardEngine(engine: Theme['engine']): Theme['engine'] {
 }
 
 /**
- * "Next theme for this site" (keyboard): Dynamic → Filter+ → each saved theme
+ * "Next theme for this site" (keyboard), in card order: Dynamic → Filter+ →
+ * Custom (only when the site has tweaks, in use or parked) → each saved theme
  * → …, plus "follow the default" first when the default is a saved theme.
  * Choices that would look identical to an existing one are left out, so every
- * press visibly changes something. Like picking from the cards/menu, moving
- * on drops the site's unsaved tweaks.
+ * press visibly changes something. Moving on parks the site's tweaks; the
+ * Custom stop brings them back.
  */
 export function nextSiteTheme(settings: ThemeSettings, url: string, host: string): ThemePatch {
     const fallback = getDefaultTheme(settings);
@@ -312,11 +399,13 @@ export function nextSiteTheme(settings: ThemeSettings, url: string, host: string
     const choices: CycleChoice[] = [
         ...(builtInDefault ? [] : [{kind: 'follow'} as CycleChoice]),
         ...CYCLE_ENGINES.map((engine): CycleChoice => ({kind: 'engine', engine})),
+        ...(hasSiteTweaks(settings, url) ? [{kind: 'custom'} as CycleChoice] : []),
         ...settings.presets
             .filter((preset) => preset.id !== fallback.id)
             .map((preset): CycleChoice => ({kind: 'theme', id: preset.id})),
     ];
     const site = resolveSiteTheme(settings, url);
+    const card = siteMode(settings, url).card;
     const index = choices.findIndex((choice) => {
         if (choice.kind === 'follow') {
             return site.source === 'default';
@@ -324,6 +413,9 @@ export function nextSiteTheme(settings: ThemeSettings, url: string, host: string
         if (choice.kind === 'engine') {
             const plain = site.source === 'engine' || (site.source === 'default' && builtInDefault);
             return plain && cardEngine(site.theme.engine) === choice.engine;
+        }
+        if (choice.kind === 'custom') {
+            return card === 'custom';
         }
         return site.source === 'preset' && site.themeId === choice.id;
     });
@@ -334,7 +426,41 @@ export function nextSiteTheme(settings: ThemeSettings, url: string, host: string
     if (next.kind === 'engine') {
         return pickSiteEngine(settings, url, host, next.engine);
     }
+    if (next.kind === 'custom') {
+        return customizeSite(settings, url, host);
+    }
     return assignSiteTheme(settings, url, host, next.id);
+}
+
+/** Short name of an engine, as on the cards (the legacy SVG filter counts as Filter+). */
+export function engineName(engine: Theme['engine']): string {
+    switch (cardEngine(engine)) {
+        case ThemeEngine.cssFilter:
+            return 'Filter+';
+        case ThemeEngine.staticTheme:
+            return 'Static';
+        default:
+            return 'Dynamic';
+    }
+}
+
+/** What the site shows, in the pane's words: "Dynamic", "Filter+", "Custom", "Night", or "Default · Night". */
+export function siteThemeLabel(settings: ThemeSettings, url: string): string {
+    const site = resolveSiteTheme(settings, url);
+    const mode = siteMode(settings, url);
+    if (mode.card === 'custom') {
+        return 'Custom';
+    }
+    if (mode.card === 'engine') {
+        return engineName(mode.engine);
+    }
+    return site.source === 'default' ? `${DEFAULT_THEME_NAME} · ${site.themeName}` : site.themeName;
+}
+
+/** "Default for new sites" in the pane's words: an engine name or a saved theme's name. */
+export function defaultThemeLabel(settings: ThemeSettings): string {
+    const fallback = getDefaultTheme(settings);
+    return fallback.id === DEFAULT_THEME_ID ? engineName(settings.theme.engine) : fallback.name;
 }
 
 /** "Next default theme for new sites" (keyboard): Dynamic → Filter+ → each saved theme → … */

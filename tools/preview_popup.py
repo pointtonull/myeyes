@@ -49,7 +49,8 @@ COLORSCHEME = {
 }
 SETTINGS = {
     "schemeVersion": 0, "enabled": True, "fetchNews": False, "theme": THEME,
-    "presets": [], "customThemes": [], "defaultThemeId": "default", "enabledByDefault": True,
+    "presets": [], "customThemes": [], "defaultThemeId": "default", "siteTweaks": [],
+    "enabledByDefault": True,
     "enabledFor": [], "disabledFor": [], "changeBrowserTheme": False,
     "syncSettings": True, "syncSitesFixes": False,
     "automation": {"enabled": False, "mode": "", "behavior": "OnOff"},
@@ -60,7 +61,8 @@ SETTINGS = {
 }
 MOCK_DATA = {
     "isEnabled": True, "isReady": True, "isAllowedFileSchemeAccess": False,
-    "settings": SETTINGS, "news": [], "shortcuts": {}, "colorScheme": COLORSCHEME,
+    "settings": SETTINGS, "news": [], "colorScheme": COLORSCHEME,
+    "shortcuts": {"addSite": "Alt+Shift+A", "cycleSiteTheme": "Alt+Shift+T"},
     "forcedScheme": None,
     "activeTab": {"url": "https://example.com/", "id": 1, "documentId": "d1",
                   "isProtected": False, "isInjected": True, "isInDarkList": False,
@@ -68,7 +70,7 @@ MOCK_DATA = {
     "uiHighlights": [],
 }
 
-SCENARIOS = ("plain", "named", "modified", "engine", "custom", "disabled")
+SCENARIOS = ("plain", "named", "modified", "engine", "custom", "disabled", "enabled", "dark", "parked")
 
 
 def mock_data(scenario="plain"):
@@ -79,7 +81,10 @@ def mock_data(scenario="plain"):
     modified  named + unsaved tweaks forked from Night (Custom lit, dot on Night)
     engine    site set to plain Filter+ (Filter+ card lit)
     custom    site has its own tweaks on the built-in default (Custom · Dynamic)
-    disabled  MyEyes off for the site (Disabled pill, stressed mascot)
+    disabled  MyEyes never darkens the site (Disabled pill)
+    enabled   MyEyes always darkens the site (Enabled pill)
+    dark      Auto on an already-dark page (Auto · already dark)
+    parked    on Filter+ with Custom tweaks parked (Custom card: restore)
     """
     data = json.loads(json.dumps(MOCK_DATA))
     settings = data["settings"]
@@ -93,6 +98,17 @@ def mock_data(scenario="plain"):
         ]
     if scenario == "disabled":
         settings["disabledFor"] = ["example.com"]
+    if scenario == "enabled":
+        settings["enabledFor"] = ["example.com"]
+    if scenario == "dark":
+        data["activeTab"]["isDarkThemeDetected"] = True
+    if scenario == "parked":
+        settings["customThemes"] = [
+            {"url": ["example.com"], "kind": "engine", "theme": {**THEME, "engine": "cssFilter"}},
+        ]
+        settings["siteTweaks"] = [
+            {"url": ["example.com"], "baseId": "default", "theme": {**THEME, "contrast": 120, "sepia": 15}},
+        ]
     if scenario in ("named", "modified"):
         settings["presets"] = [
             {"id": "night", "name": "Night", "urls": ["example.com"],

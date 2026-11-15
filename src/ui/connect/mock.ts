@@ -27,6 +27,7 @@ export function getMockData(override = {} as Partial<ExtensionData>): ExtensionD
             } as Theme,
             customThemes: [],
             defaultThemeId: 'default',
+            siteTweaks: [],
             enabledFor: [],
             disabledFor: [],
             syncSitesFixes: false,
@@ -64,7 +65,7 @@ export function getMockData(override = {} as Partial<ExtensionData>): ExtensionD
         news: [],
         shortcuts: {
             'addSite': 'Alt+Shift+A',
-            'toggle': 'Alt+Shift+D',
+            'cycleSiteTheme': 'Alt+Shift+T',
         },
         devtools: {
             dynamicFixesText: '',

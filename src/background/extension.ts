@@ -14,7 +14,8 @@ import {PromiseBarrier} from '../utils/promise-barrier';
 import {StateManager} from '../utils/state-manager';
 import {getActiveTab} from '../utils/tabs';
 import {isInTimeIntervalLocal, nextTimeInterval, isNightAtLocation, nextTimeChangeAtLocation, getDuration} from '../utils/time';
-import {nextDefaultTheme, nextSiteTheme, resolveSiteTheme} from '../utils/named-themes';
+import {defaultThemeLabel, nextDefaultTheme, nextSiteTheme, resolveSiteTheme, siteThemeLabel} from '../utils/named-themes';
+import {SITE_ENABLE_LABELS, getSiteEnableMode, isSiteDarkened, toggleSiteEnable} from '../utils/site-enable';
 import {isURLInList, getURLHostOrProtocol, isURLEnabled, isPDF} from '../utils/url';
 
 import ConfigManager from './config-manager';
@@ -306,13 +307,16 @@ export class Extension {
         await Extension.waitUntilReady();
         Extension.stateManager!.loadState();
         switch (command) {
-            case 'toggle':
+            case 'toggle': {
                 logInfo('Toggle command entered');
+                const enabled = !Extension.isExtensionSwitchedOn();
+                await Extension.confirmCommand(enabled ? 'MyEyes on' : 'MyEyes off', 'all sites');
                 Extension.changeSettings({
-                    enabled: !Extension.isExtensionSwitchedOn(),
+                    enabled,
                     automation: {...UserStorage.settings.automation, ...{enabled: false}},
                 });
                 break;
+            }
             case 'addSite': {
                 logInfo('Add Site command entered');
                 async function scriptPDF(tabId: number, frameId: number): Promise<boolean> {
@@ -344,9 +348,24 @@ export class Extension {
 
                 const pdf = async () => isPDF(frameURL || await TabManager.getActiveTabURL());
                 if (((__CHROMIUM_MV2__ || __CHROMIUM_MV3__) && await scriptPDF(tabId!, frameId!)) || await pdf()) {
-                    Extension.changeSettings({enableForPDF: !UserStorage.settings.enableForPDF});
+                    const enableForPDF = !UserStorage.settings.enableForPDF;
+                    await Extension.confirmCommand(enableForPDF ? 'Enabled' : 'Disabled', 'all PDFs');
+                    Extension.changeSettings({enableForPDF});
                 } else {
-                    Extension.toggleActiveTab();
+                    // MyEyes!: flip whether this page is darkened, preferring
+                    // Auto when it gives that (utils/site-enable).
+                    const tab = await Extension.getActiveTabInfo();
+                    if (!tab.url) {
+                        break;
+                    }
+                    const host = getURLHostOrProtocol(tab.url);
+                    const patch = toggleSiteEnable(UserStorage.settings, tab.url, host, tab);
+                    const next = {...UserStorage.settings, ...patch};
+                    const mode = getSiteEnableMode(next, tab.url);
+                    const darkened = isSiteDarkened(next, tab.url, tab);
+                    const detail = mode === 'auto' ? `${host} · ${darkened ? 'darkening' : 'page is already dark'}` : host;
+                    await Extension.confirmCommand(SITE_ENABLE_LABELS[mode], detail);
+                    Extension.changeSettings(patch, true);
                 }
                 break;
             }
@@ -364,16 +383,37 @@ export class Extension {
                 logInfo('Cycle site theme command entered');
                 const url = await TabManager.getActiveTabURL();
                 if (url) {
-                    Extension.changeSettings(nextSiteTheme(UserStorage.settings, url, getURLHostOrProtocol(url)), true);
+                    const host = getURLHostOrProtocol(url);
+                    const patch = nextSiteTheme(UserStorage.settings, url, host);
+                    await Extension.confirmCommand(siteThemeLabel({...UserStorage.settings, ...patch}, url), host);
+                    Extension.changeSettings(patch, true);
                 }
                 break;
             }
-            case 'cycleDefaultTheme':
+            case 'cycleDefaultTheme': {
                 logInfo('Cycle default theme command entered');
-                Extension.changeSettings(nextDefaultTheme(UserStorage.settings));
+                const patch = nextDefaultTheme(UserStorage.settings);
+                await Extension.confirmCommand(defaultThemeLabel({...UserStorage.settings, ...patch}), 'default for new sites');
+                Extension.changeSettings(patch);
                 break;
+            }
         }
     };
+
+    /**
+     * MyEyes!: confirm a keyboard command right away, before the page
+     * re-renders (the change may be subtle, or a heavy page slow to repaint):
+     * a small on-screen note in the active tab, else a brief toolbar badge.
+     */
+    private static async confirmCommand(title: string, detail?: string) {
+        const tab = await getActiveTab();
+        if (!tab?.id) {
+            return;
+        }
+        if (!TabManager.showOSD(tab.id, {title, detail})) {
+            IconManager.flashBadge(tab.id, '✓');
+        }
+    }
 
     // 75 is small enough to not notice it, and still catches when someone
     // is holding down a certain shortcut.
