@@ -211,7 +211,8 @@ def crop_popup(png_path, bg=(0x16, 0x18, 0x2e), pad=6):
 def main():
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--out", default="./shots", help="output directory (default: ./shots)")
-    parser.add_argument("--wait", type=float, default=3.0, help="render wait before capture")
+    parser.add_argument("--wait", type=float, default=4.5,
+                        help="render wait before capture (shorter waits sometimes catch text unpainted)")
     parser.add_argument("--scenario", choices=SCENARIOS, default="plain",
                         help="mock settings: no themes / named themes / unsaved changes")
     parser.add_argument("--click", action="append", default=[],
