@@ -79,6 +79,8 @@ export interface CustomSiteConfig {
     url: string[];
     theme: Theme;
     builtIn?: boolean;
+    /** MyEyes!: set when this is an unsaved fork of a named theme (see utils/named-themes). */
+    baseId?: string;
 }
 
 export interface ThemePreset {
@@ -101,6 +103,8 @@ export interface UserSettings {
     theme: Theme;
     presets: ThemePreset[];
     customThemes: CustomSiteConfig[];
+    /** MyEyes!: theme for sites without one of their own — 'default' (built-in) or a preset id. */
+    defaultThemeId: string;
     enabledByDefault: boolean;
     enabledFor: string[];
     disabledFor: string[];

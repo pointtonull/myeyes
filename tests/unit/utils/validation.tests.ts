@@ -97,6 +97,7 @@ test('Settings Validation', () => {
             {url: ['a.com'], theme: null},
             null,
         ],
+        defaultThemeId: '',
         disabledFor: ['a.com', '', 'b.com'],
         enabledFor: {0: 'a.com', 1: 'b.com'},
         enabledByDefault: true,
@@ -128,7 +129,11 @@ test('Settings Validation', () => {
     expect(wonkySet as any).toEqual({
         ...DEFAULT_SETTINGS,
         disabledFor: ['a.com', 'b.com'],
-        presets: [{id: 'p5', name: 'P5', urls: ['a.com'], theme: {brightness: 100}}],
+        // MyEyes!: presets are named themes and may have no pinned sites (p3)
+        presets: [
+            {id: 'p3', name: 'P3', urls: [], theme: {brightness: 100}},
+            {id: 'p5', name: 'P5', urls: ['a.com'], theme: {brightness: 100}},
+        ],
         customThemes: [{url: ['a.com'], theme: {brightness: 100}}],
     });
 
@@ -181,6 +186,7 @@ test('Settings Validation', () => {
         customThemes: [
             {url: ['a.com'], theme: {brightness: 100} as Theme},
         ],
+        defaultThemeId: 'p5',
         disabledFor: ['a.com', 'b.com'],
         enabledFor: ['c.com'],
         enabledByDefault: false,

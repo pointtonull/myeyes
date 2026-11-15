@@ -27,6 +27,10 @@ function isNonEmptyArrayOfNonEmptyStrings(x: any): x is any[] {
     return Array.isArray(x) && x.length > 0 && x.every((s) => isNonEmptyString(s));
 }
 
+function isArrayOfNonEmptyStrings(x: any): x is string[] {
+    return Array.isArray(x) && x.every(isNonEmptyString);
+}
+
 function isRegExpMatch(regexp: RegExp) {
     return (x: any): x is string => {
         return isString(x) && x.match(regexp) != null;
@@ -120,7 +124,9 @@ export function validateSettings(settings: Partial<UserSettings>): SettingValida
         }
         presetValidator.validateProperty(preset, 'id', isNonEmptyString, preset);
         presetValidator.validateProperty(preset, 'name', isNonEmptyString, preset);
-        presetValidator.validateProperty(preset, 'urls', isNonEmptyArrayOfNonEmptyStrings, preset);
+        // MyEyes!: presets are named themes, which may have no pinned sites yet
+        // (or be used only as the default) — upstream required at least one URL.
+        presetValidator.validateProperty(preset, 'urls', isArrayOfNonEmptyStrings, preset);
         presetValidator.validateProperty(preset, 'theme', isValidPresetTheme, preset);
         return presetValidator.errors.length === 0;
     });
@@ -135,6 +141,8 @@ export function validateSettings(settings: Partial<UserSettings>): SettingValida
         presetValidator.validateProperty(custom, 'theme', isValidPresetTheme, custom);
         return presetValidator.errors.length === 0;
     });
+
+    validateProperty(settings, 'defaultThemeId', isNonEmptyString, DEFAULT_SETTINGS);
 
     validateProperty(settings, 'enabledFor', isArray, DEFAULT_SETTINGS);
     validateArray(settings, 'enabledFor', isNonEmptyString);

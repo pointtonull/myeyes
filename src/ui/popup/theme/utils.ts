@@ -1,42 +1,27 @@
 import type {Theme, ViewProps} from '../../../definitions';
-import {isURLInList} from '../../../utils/url';
+import {editSiteTheme, resolveSiteTheme} from '../../../utils/named-themes';
+import {getURLHostOrProtocol} from '../../../utils/url';
 
 interface ThemePresets {
     theme: Theme;
     change: (config: Partial<Theme>) => void;
 }
 
+// MyEyes!: the current site's theme. Edits fork it per site (see
+// utils/named-themes) instead of changing a shared theme in place; the user
+// commits them with Save / Save as from the Theme menu.
 export function getCurrentThemePreset(props: ViewProps): ThemePresets {
-    const custom = props.data.settings.customThemes.find(
-        ({url}) => isURLInList(props.data.activeTab.url, url)
-    );
-    const preset = custom ? null : props.data.settings.presets.find(
-        ({urls}) => isURLInList(props.data.activeTab.url, urls)
-    );
-    let theme = custom ?
-        custom.theme :
-        preset ?
-            preset.theme :
-            props.data.settings.theme;
+    const url = props.data.activeTab.url;
+    let theme = resolveSiteTheme(props.data.settings, url).theme;
     if (props.data.forcedScheme) {
         const mode = props.data.forcedScheme === 'dark' ? 1 : 0;
         theme = {...theme, mode};
     }
 
     function setTheme(config: Partial<Theme>) {
-        if (custom) {
-            custom.theme = {...custom.theme, ...config};
-            props.actions.changeSettings({
-                customThemes: props.data.settings.customThemes,
-            });
-        } else if (preset) {
-            preset.theme = {...preset.theme, ...config};
-            props.actions.changeSettings({
-                presets: props.data.settings.presets,
-            });
-        } else {
-            props.actions.setTheme(config);
-        }
+        props.actions.changeSettings(
+            editSiteTheme(props.data.settings, url, getURLHostOrProtocol(url), config),
+        );
         if (
             config.mode != null &&
             props.data.settings.automation.behavior === 'Scheme'

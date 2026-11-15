@@ -14,6 +14,7 @@ import {PromiseBarrier} from '../utils/promise-barrier';
 import {StateManager} from '../utils/state-manager';
 import {getActiveTab} from '../utils/tabs';
 import {isInTimeIntervalLocal, nextTimeInterval, isNightAtLocation, nextTimeChangeAtLocation, getDuration} from '../utils/time';
+import {resolveSiteTheme} from '../utils/named-themes';
 import {isURLInList, getURLHostOrProtocol, isURLEnabled, isPDF} from '../utils/url';
 
 import ConfigManager from './config-manager';
@@ -708,9 +709,9 @@ export class Extension {
         const settings = UserStorage.settings;
         const tabInfo = Extension.getTabInfo(tabURL);
         if (Extension.isExtensionSwitchedOn() && isURLEnabled(tabURL, settings, tabInfo) && !topFrameHasDarkTheme) {
-            const custom = settings.customThemes.find(({url: urlList}) => isURLInList(tabURL, urlList));
-            const preset = custom ? null : settings.presets.find(({urls}) => isURLInList(tabURL, urls));
-            let theme = custom ? custom.theme : preset ? preset.theme : settings.theme;
+            // MyEyes!: one resolver for fork → custom → pinned named theme → default theme
+            const site = resolveSiteTheme(settings, tabURL);
+            let theme = site.theme;
             if (Extension.autoState === 'scheme-dark' || Extension.autoState === 'scheme-light') {
                 const mode = Extension.autoState === 'scheme-dark' ? 1 : 0;
                 theme = {...theme, mode};
@@ -724,8 +725,7 @@ export class Extension {
             );
 
             logInfo(`Creating CSS for url: ${url}`);
-            logInfo(`Custom theme ${custom ? 'was found' : 'was not found'}, Preset theme ${preset ? 'was found' : 'was not found'}
-            The theme(${custom ? 'custom' : preset ? 'preset' : 'global'} settings) used is: ${JSON.stringify(theme)}`);
+            logInfo(`Theme source: ${site.source} (${site.themeName}${site.modified ? ', unsaved changes' : ''}), used: ${JSON.stringify(theme)}`);
             switch (theme.engine) {
                 case ThemeEngine.cssFilter: {
                     return {
