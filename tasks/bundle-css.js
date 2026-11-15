@@ -89,13 +89,15 @@ export function createBundleCSSTask(cssEntries) {
         return currentWatchFiles;
     };
 
+    const isPlus = (platform) => platform === PLATFORM.CHROMIUM_MV2_PLUS || platform === PLATFORM.CHROMIUM_MV3_PLUS;
+
     const bundleCSS = async ({platforms, debug}) => {
         for (const entry of cssEntries) {
             for (const platform in platforms) {
                 if (!platforms[platform]) {
                     continue;
                 }
-                const css = await bundleCSSEntry(entry, platform === PLATFORM.CHROMIUM_MV2_PLUS || platform === PLATFORM.CHROMIUM_MV3_PLUS);
+                const css = await bundleCSSEntry(entry, isPlus(platform));
                 await writeFiles(entry.dest, {[platform]: true}, debug, css);
             }
         }
@@ -109,9 +111,16 @@ export function createBundleCSSTask(cssEntries) {
                 return entry.watchFiles?.includes(changed) || changed === entryFile;
             });
         });
+        // MyEyes!: per platform, like bundleCSS (upstream always built the
+        // Plus variant here, which needs src/plus/ that this fork lacks)
         for (const entry of entries) {
-            const css = await bundleCSSEntry(entry, true);
-            await writeFiles(entry.dest, platforms, true, css);
+            for (const platform in platforms) {
+                if (!platforms[platform]) {
+                    continue;
+                }
+                const css = await bundleCSSEntry(entry, isPlus(platform));
+                await writeFiles(entry.dest, {[platform]: true}, true, css);
+            }
         }
 
         const newWatchFiles = getWatchFiles();

@@ -1,3 +1,5 @@
+@import "../main-page/glow.less"; // GlowButton mixins (no CSS output of its own)
+
 .mobile {
     body {
         border: none;
@@ -27,42 +29,48 @@
     .m-header {
         align-items: center;
         display: flex;
+        // the gear's GlowButton glow paints into the header, over the body
+        isolation: isolate;
         justify-content: space-between;
     }
 
     .m-header__side {
         flex: none;
-        width: 2rem;
+        width: 1.85rem;
     }
 
-    // gear in a round glass button, like the mockup
+    // gear: a round GlowButton, softly lit from the top-left like the mockup
     .m-header__gear {
+        .me-gb();
+        .me-gb-hover();
+        --gb-surface-top: rgba(64, 54, 128, 0.95);
+        --gb-surface-bottom: rgba(56, 48, 114, 0.95);
+        --gb-light: rgba(210, 195, 255, 0.22);
+        --gb-inner: rgba(140, 120, 235, 0.4);
+        --gb-inner-size: 0.45rem;
+        --gb-ring-a: rgba(140, 118, 236, 0.95);
+        --gb-ring-b: rgba(98, 77, 184, 0.95);
+        --gb-ring-c: rgba(84, 69, 158, 0.95);
+        --gb-glow-opacity: 0.2;
         align-items: center;
-        background: rgba(152, 96, 245, 0.12);
-        border: 1px solid rgba(152, 96, 245, 0.4);
         border-radius: 50%;
-        box-shadow: 0 0 10px rgba(152, 96, 245, 0.3);
-        color: @color-fore;
+        color: #ddd6ff;
         cursor: pointer;
         display: flex;
-        height: 2rem;
+        height: 1.85rem;
         justify-content: center;
         padding: 0;
 
         svg {
-            height: 1.15rem;
-            width: 1.15rem;
-        }
-
-        &:hover {
-            color: #fff;
+            height: 1.05rem;
+            width: 1.05rem;
         }
     }
 
     .m-logo {
         align-items: center;
         display: flex;
-        gap: 0.4rem;
+        gap: 0.45rem;
         grid-area: logo;
         justify-content: center;
         margin: 0 auto;
@@ -71,19 +79,20 @@
         // kit logo-mark: wide glasses in a square canvas -> crop the empty band
         &__icon {
             display: block;
+            filter: drop-shadow(0 0 5px rgba(120, 140, 255, 0.35));
             height: 1.45rem;
             object-fit: cover;
             width: 2.7rem;
         }
 
+        // the mockup's wordmark: white, heavy, italic, a faint violet halo
         &__text {
-            background: linear-gradient(90deg, #46e0f5, #9860f5, #ef55ed);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            font-size: 1.2rem;
-            font-weight: 700;
-            letter-spacing: 0.01em;
+            color: #fbfaff;
+            font-size: 1.3rem;
+            font-style: italic;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            text-shadow: 0 0 10px rgba(152, 96, 245, 0.45);
         }
     }
 
@@ -290,10 +299,29 @@
     }
 }
 
+// the pane: deep indigo, a touch lighter and warmer toward the bottom, inside
+// a bright violet frame with a soft inner glow (popup-mockup.png)
 .preview:not(.mobile) {
     body {
-        border-color: rgba(152, 96, 245, 0.5);
+        background:
+            radial-gradient(90% 40% at 50% 0%, rgba(40, 40, 100, 0.35), transparent 70%),
+            radial-gradient(120% 45% at 50% 100%, rgba(48, 36, 120, 0.5), transparent 75%),
+            linear-gradient(180deg, #16163a, #19183f 55%, #1d1a4a);
+        border-color: #7152fb;
         border-radius: 1rem;
+        box-shadow: inset 0 0 0 1px rgba(40, 30, 110, 0.6), inset 0 0 18px rgba(113, 82, 251, 0.22);
+        // tighter top/bottom than DR's 1rem (the width keeps its padding)
+        padding-bottom: 0.85rem;
+        padding-top: 0.5rem;
+    }
+
+    // MyEyes! pane height: just the main page's content, close to the
+    // mockup's 4:5 (DR's 27.5rem left a dead band at the bottom)
+    // body = header (1.85) + gap (1) + pages
+    .m-body-short { height: 25.65rem; }
+    .m-section.pages-section {
+        height: 22.8rem;
+        margin-top: 1rem;
     }
 }
 

@@ -16,11 +16,12 @@ interface ResetStore {
 }
 
 /**
- * Header button (mirrors the gear): a clean slate for the current site — its
- * tweaks (parked ones too), engine pick and saved theme go; it follows the
- * default again (utils/named-themes resetSite). The only way, besides the
- * Theme menu's Revert, to discard tweaks, so it takes two clicks: the first
- * arms it ("Reset?"), the second within 3 s resets.
+ * Square button at the end of the sliders row (popup-mockup.png): a clean
+ * slate for the current site — its tweaks (parked ones too), engine pick and
+ * saved theme go; it follows the default again (utils/named-themes
+ * resetSite). The only way, besides the Theme menu's Revert, to discard
+ * tweaks, so it takes two clicks: the first arms it ("Sure?"), the second
+ * within 3 s resets.
  */
 export function ResetButton(props: ViewProps) {
     const context = getContext();
@@ -60,17 +61,15 @@ export function ResetButton(props: ViewProps) {
             : `Reset ${host}: drop its tweaks and follow the default`;
 
     return (
-        <span class="m-header__side me-reset-wrap">
-            <button
-                class={{'me-reset': true, 'me-reset--armed': armed}}
-                disabled={!enabled}
-                title={title}
-                aria-label={title}
-                onclick={onclick}
-            >
-                <KitIcon name="reset" />
-            </button>
-            {armed ? <span class="me-reset__confirm">Reset?</span> : null}
-        </span>
+        <button
+            class={{'me-reset': true, 'me-reset--armed': armed}}
+            disabled={!enabled}
+            title={title}
+            aria-label={title}
+            onclick={onclick}
+        >
+            <KitIcon name="reset" />
+            <span class="me-reset__label">{armed ? 'Sure?' : 'Reset'}</span>
+        </button>
     );
 }

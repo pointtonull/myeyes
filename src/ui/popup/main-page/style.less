@@ -1,32 +1,38 @@
 @import "../../theme.less";
+@import "./glow.less";
 
-// --- MyEyes! pane — glass + neon per brand/ui-kit (palette.json + approved mockup)
+// --- MyEyes! pane: neon glass per brand/reference/popup-mockup.png
 // palette: bg #15152f · surface #26234d · border #6549a7 · purple #9860f5
 //          cyan #46e0f5 · pink #ef55ed · text #f6f2ff · muted #c8bce5 · gold #ffd27b
+// Every control is a GlowButton (glow.less); the page is the stacking context
+// its glows paint into (see the stacking rule there).
 @me-accent: #9860f5;
-@me-glass-bg: rgba(38, 35, 77, 0.55);
+@me-text: #f6f2ff;
 @me-glass-border: rgba(101, 73, 167, 0.55);
-.me-glass() {
-    background: @me-glass-bg;
-    border: 1px solid @me-glass-border;
-    backdrop-filter: blur(6px);
+
+// (.pages-section raises specificity over page-viewer's own .page background)
+.pages-section .page {
+    background: transparent;
+    isolation: isolate;
 }
-.me-glow() {
-    border-color: #c9a8ff;
-    box-shadow: 0 0 14px rgba(152, 96, 245, 0.65), inset 0 0 10px rgba(152, 96, 245, 0.18);
-}
+
+// vertical rhythm between the groups, after the mockup's proportions
+.m-section.me-modes-section { margin-top: 1.1rem; }
+.m-section.me-tune { margin-top: 0.85rem; }
+.m-section.me-ai-section { margin-top: 1.1rem; }
+.m-section.me-footer { margin-top: 0.9rem; }
 
 .me-top {
     align-items: center;
     display: flex;
-    gap: 0.6rem;
+    gap: 0.45rem;
 }
 .me-mascot {
     flex: none;
-    height: 5.6rem;
-    margin: -0.4rem -0.2rem -0.4rem -0.4rem;
+    height: 5.5rem;
+    margin: -0.55rem -0.3rem -0.4rem -0.45rem;
     object-fit: contain;
-    width: 6.6rem;
+    width: 6.5rem;
 }
 
 .me-chevron {
@@ -36,57 +42,80 @@
     img { height: 0.8rem; width: 0.8rem; }
 }
 
-// Disabled / Auto / Enabled for the current site
+// Disabled / Auto / Enabled for the current site: one glass track (a
+// segmented control), the active segment raised and lit inside it
 .me-pills {
+    .me-gb();
+    --gb-surface-top: rgba(44, 42, 96, 0.55);
+    --gb-surface-bottom: rgba(52, 48, 108, 0.6);
+    --gb-light: rgba(205, 190, 255, 0.06);
+    --gb-ring-a: rgba(140, 124, 228, 0.85);
+    --gb-ring-b: rgba(62, 55, 128, 0.9);
+    --gb-ring-c: rgba(118, 102, 207, 0.9);
+    border-radius: 1.45rem;
     display: grid;
     flex: auto;
-    gap: 0.35rem;
     grid-template-columns: repeat(3, 1fr);
+    // the lit segment's glow must paint over this track, not under it
+    isolation: isolate;
     min-width: 0;
 }
 .me-pill {
-    .me-glass();
     align-items: center;
-    border-radius: 0.9rem;
-    color: @color-fore;
+    background: none;
+    border: @me-gb-border solid transparent;
+    border-radius: 1.3rem;
+    color: #c4bde3;
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.15rem;
     justify-content: center;
+    min-height: 4.1rem;
     min-width: 0;
-    padding: 0.55rem 0.15rem;
+    padding: 0.35rem 0.1rem;
 
     // kit glasses sit in a square 64x64 canvas: crop the empty top/bottom
     &__icon img {
         display: block;
-        height: 1.55rem;
+        height: 1.5rem;
         object-fit: cover;
-        width: 2.8rem;
+        width: 2.75rem;
     }
     &__label {
         font-size: @size-text-normal;
         font-weight: 700;
+        line-height: 1.1;
     }
     &__sub {
         font-size: @size-text-small;
         line-height: 1;
-        margin-top: -0.1rem;
         opacity: 0.85;
         white-space: nowrap;
     }
+
+    &:hover { color: #fff; }
+    &:focus-visible { border-color: #fff; outline: none; }
+    &:not(.me-pill--active) .me-pill__icon img { opacity: 0.85; }
 }
-.me-pill--enabled.me-pill--active,
-.me-pill--auto.me-pill--active {
-    .me-glow();
-    color: #fff;
-    .me-pill__icon img { filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.6)); }
+.me-pill--active {
+    .me-gb();
+    .me-gb-selected();
+    // the glasses carry their own colours: just let them shine
+    .me-pill__icon img { filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.55)); }
 }
+// the "off" segment is lit in neutral silver, not brand purple
 .me-pill--disabled.me-pill--active {
-    border-color: @color-fore;
-    color: #fff;
+    --gb-surface-top: rgba(92, 88, 140, 0.55);
+    --gb-surface-bottom: rgba(70, 66, 118, 0.55);
+    --gb-light-2: rgba(200, 196, 235, 0.12);
+    --gb-inner: rgba(190, 185, 230, 0.55);
+    --gb-ring-b: #e4e1f2;
+    --gb-ring-c: #c9c4e3;
+    --gb-glow: #a8a3d6;
+    --gb-glow-opacity: 0.45;
+    .me-pill__icon img { filter: none; }
 }
-.me-pill:not(.me-pill--active) { opacity: 0.7; }
 
 .me-modes {
     display: grid;
@@ -94,62 +123,92 @@
     grid-template-columns: repeat(4, 1fr);
 }
 .me-card {
-    .me-glass();
+    .me-gb();
+    .me-gb-hover();
     align-items: center;
     border-radius: 0.8rem;
-    color: @color-fore;
+    color: #ece8ff;
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
-    padding: 0.7rem 0.2rem;
+    gap: 0.2rem;
+    // fixed height: lighting Custom (which adds a sub-label) never shifts the row
+    height: 4.55rem;
+    justify-content: center;
+    padding: 0.35rem 0.15rem;
 
-    &__icon img { height: 1.8rem; width: 1.8rem; }
-    &__label { font-size: @size-text-normal; font-weight: 700; white-space: nowrap; }
+    // kit icons have ~12% padding inside their canvas
+    &__icon img { display: block; height: 2.3rem; width: 2.3rem; }
+    &:has(.me-card__sub) {
+        gap: 0.1rem;
+
+        .me-card__icon img { height: 1.75rem; width: 1.75rem; }
+    }
+    &__label { font-size: @size-text-normal; font-weight: 700; line-height: 1.1; white-space: nowrap; }
     // Custom's base engine ("Dynamic"), shown under the label when lit
     &__sub {
-        color: @color-fore;
+        color: #d9d0ff;
         font-size: @size-text-small;
         line-height: 1;
-        margin-top: -0.2rem;
-        opacity: 0.85;
+        opacity: 0.9;
     }
 }
 .me-card--active {
-    .me-glow();
-    color: #fff;
+    .me-gb-selected();
 }
 
+// flex rows: undo body's stacked-section spacing (.m-section > :not(:first-child))
+.me-top > :not(:first-child),
+.me-tune > :not(:first-child) { margin-top: 0; }
+
+// sliders + a divider + the square Reset button, in one row
+.me-tune {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+
+    &__divider {
+        align-self: stretch;
+        background: linear-gradient(180deg, transparent, rgba(110, 96, 200, 0.7) 15%, rgba(110, 96, 200, 0.7) 85%, transparent);
+        flex: none;
+        margin: 0.1rem 0;
+        width: 1px;
+    }
+}
 .me-sliders {
     display: grid;
-    gap: 0.5rem 0.8rem;
+    flex: auto;
+    gap: 0.5rem 0.45rem;
     grid-template-columns: repeat(4, 1fr);
+    min-width: 0;
 }
 .me-slider {
     align-items: center;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.15rem;
+    min-width: 0;
 
-    &__icon img { height: 1.2rem; width: 1.2rem; }
-    &__label { font-size: @size-text-small; white-space: nowrap; }
+    &__icon img { display: block; height: 1.25rem; width: 1.25rem; }
+    &__label { color: #ece8ff; font-size: @size-text-small; font-weight: 600; white-space: nowrap; }
 
-    // DR's slider restyled: chunky rounded track, round glowing knob, no number
+    // DR's slider restyled: chunky rounded track, round lavender knob, no number
     .slider { height: 1rem; width: 100%; }
     // inset track + thumb rail by the knob radius so a knob at 0%/100% stays in
     // its own column (otherwise Saturation 100% and Sepia 0% knobs touch)
     .slider__thumb-wrapper {
-        margin-left: 0.45rem;
-        width: calc(100% - 0.9rem);
+        margin-left: 0.4rem;
+        width: calc(100% - 0.8rem);
     }
     .slider__track,
     .slider--active .slider__track {
-        background-color: rgba(255, 255, 255, 0.09);
+        background-color: rgba(112, 100, 210, 0.5);
         border-radius: 1rem;
-        height: 0.42rem;
-        margin-left: 0.45rem;
-        margin-top: 0.29rem;
-        width: calc(100% - 0.9rem);
+        box-shadow: inset 0 1px 1px rgba(10, 8, 40, 0.35);
+        height: 0.36rem;
+        margin-left: 0.1rem;
+        margin-top: 0.32rem;
+        width: calc(100% - 0.2rem);
 
         &::before,
         &::after { display: none; }
@@ -159,85 +218,160 @@
 
         &::before { display: none; }
     }
+    // knob: a white ring around a lavender pearl, lit from the top-left
     .slider__thumb,
     .slider--active .slider__thumb {
-        background-color: #fff;
+        background: radial-gradient(circle at 38% 32%, #f4f2ff, #d4cffc 55%, #bdb6f5);
+        border: 2px solid #fbfaff;
         border-radius: 50%;
-        box-shadow: 0 0 6px rgba(255, 255, 255, 0.5), 0 0 12px rgba(152, 96, 245, 0.65);
-        height: 0.9rem;
-        margin-left: -0.45rem;
-        margin-top: 0.05rem;
-        width: 0.9rem;
+        box-shadow: 0 0 6px rgba(255, 255, 255, 0.35), 0 0 12px rgba(152, 96, 245, 0.55);
+        box-sizing: border-box;
+        height: 0.8rem;
+        margin-left: -0.4rem;
+        margin-top: 0.1rem;
+        width: 0.8rem;
     }
     .slider__thumb__value { display: none; }
 
-    &--brightness .slider__track__fill { background: linear-gradient(90deg, #9860f5, #a855f7); }
-    &--contrast .slider__track__fill { background: linear-gradient(90deg, #5b5bd6, #8b7cf6); }
-    &--saturation .slider__track__fill { background: linear-gradient(90deg, #46e0f5, #60a5fa); }
-    &--sepia .slider__track__fill { background: linear-gradient(90deg, #ffd27b, #f0a050); }
-    &--saturation .me-slider__icon { color: #46e0f5; }
-    &--sepia .me-slider__icon { color: #f0b457; }
+    &--brightness .slider__track__fill { background: linear-gradient(90deg, #8a55fc, #7c56f4); }
+    &--contrast .slider__track__fill { background: linear-gradient(90deg, #8a59fc, #7d57f6); }
+    &--saturation .slider__track__fill { background: linear-gradient(90deg, #6fe1fc, #8662f5); }
+    &--sepia .slider__track__fill { background: linear-gradient(90deg, #ffcc78, #e9b08a); }
+    &--sepia .slider__thumb { background: radial-gradient(circle at 38% 32%, #fff8fa, #f1dfe6 55%, #e6cad6); }
+}
+
+// Reset: a square GlowButton, lit while the site has something to reset
+.me-reset {
+    .me-gb();
+    .me-gb-hover();
+    align-items: center;
+    border-radius: 0.6rem;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    font-size: @size-text-small;
+    font-weight: 700;
+    gap: 0.1rem;
+    height: 2.5rem;
+    justify-content: center;
+    padding: 0;
+    width: 2.6rem;
+
+    &:not(:disabled) {
+        .me-gb-selected();
+        --gb-inner-size: 0.7rem;
+        --gb-glow-opacity: 0.7;
+    }
+    img { display: block; height: 1.05rem; width: 1.05rem; }
+
+    // first click arms it: pink, asking "Sure?"
+    &--armed:not(:disabled) {
+        --gb-surface-top: rgba(150, 40, 150, 0.6);
+        --gb-surface-bottom: rgba(120, 30, 130, 0.6);
+        --gb-inner: rgba(239, 85, 237, 0.9);
+        --gb-ring-b: #ffd9fe;
+        --gb-ring-c: #ff9cfd;
+        --gb-glow: #ef55ed;
+    }
 }
 
 .me-ai {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.6rem;
     grid-template-columns: 1fr 1fr;
 }
+// AI Enhance / Clean Up: not built yet, so aria-disabled (no :disabled
+// dimming) — they keep the mockup's look but do nothing
 .me-ai__btn {
-    .me-glass();
-    align-items: center;
-    border-radius: 1rem;
-    color: @color-fore;
-    cursor: not-allowed;
-    display: flex;
-    font-weight: 700;
-    gap: 0.4rem;
-    justify-content: center;
-    opacity: 0.9;
-    padding: 0.7rem;
-
-    .me-ai__icon img { height: 1.2rem; width: 1.2rem; }
-}
-.me-ai__btn--enhance {
-    background: linear-gradient(135deg, #9860f5, #a855f7);
-    border-color: transparent;
-    box-shadow: 0 0 14px rgba(152, 96, 245, 0.5);
-    color: #fff;
-
-    .me-ai__icon { color: #ef55ed; }
-}
-
-.me-footer {
-    border-top: 1px solid @me-glass-border;
-    padding-top: @indent-large;
-}
-.me-default {
-    .me-glass();
+    .me-gb();
     align-items: center;
     border-radius: 1.1rem;
+    cursor: help;
+    display: flex;
+    font-size: @size-text-large;
+    font-weight: 700;
+    gap: 0.45rem;
+    justify-content: center;
+    min-height: 2.35rem;
+    padding: 0.4rem 0.6rem;
+
+    .me-ai__icon img { display: block; height: 1.35rem; width: 1.35rem; }
+}
+.me-ai__btn--enhance { .me-gb-primary(); }
+.me-ai__btn--clean { .me-gb-bright(); }
+
+.me-footer {
+    padding-top: 0.85rem;
+    position: relative;
+
+    // hairline divider above "Default for new sites"
+    &::before {
+        background: linear-gradient(90deg, rgba(95, 71, 186, 0.35), rgba(95, 71, 186, 0.9) 20%, rgba(95, 71, 186, 0.9) 80%, rgba(95, 71, 186, 0.35));
+        content: "";
+        height: 1px;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+}
+.me-default {
+    .me-gb();
+    --gb-surface-top: rgba(40, 38, 90, 0.6);
+    --gb-surface-bottom: rgba(36, 35, 82, 0.6);
+    --gb-light: rgba(205, 190, 255, 0.07);
+    --gb-ring-a: rgba(112, 92, 200, 0.9);
+    --gb-ring-b: rgba(90, 69, 175, 0.9);
+    --gb-ring-c: rgba(98, 80, 190, 0.9);
+    align-items: center;
+    border-radius: 1.15rem;
     display: flex;
     gap: 0.5rem;
-    padding: 0.45rem 0.45rem 0.45rem 0.75rem;
+    // the value pill's glow paints over this bar (menus inside stay on top:
+    // this is the last thing on the page)
+    isolation: isolate;
+    padding: 0.35rem 0.35rem 0.35rem 0.75rem;
 
-    &__home img { display: block; height: 1.3rem; width: 1.3rem; }
-    &__label { flex: auto; font-weight: 600; white-space: nowrap; }
+    &__home img { display: block; height: 1.35rem; width: 1.35rem; }
+    &__label {
+        color: #ece8ff;
+        flex: auto;
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
     &__value {
+        .me-gb();
+        .me-gb-hover();
+        --gb-surface-top: rgba(50, 44, 104, 0.85);
+        --gb-surface-bottom: rgba(44, 40, 96, 0.85);
+        --gb-ring-a: #b479fa;
+        --gb-ring-b: #7a4fd0;
+        --gb-ring-c: #9a68ec;
+        --gb-ring-width: 1.5px;
+        --gb-glow-opacity: 0.18;
         align-items: center;
-        background: rgba(152, 96, 245, 0.14);
-        border: 1px solid rgba(152, 96, 245, 0.55);
         border-radius: 1rem;
         color: #fff;
         cursor: pointer;
         display: flex;
-        font-weight: 600;
-        gap: 0.35rem;
-        padding: 0.35rem 0.6rem;
+        font-weight: 700;
+        gap: 0.4rem;
+        padding: 0.3rem 0.55rem;
         white-space: nowrap;
     }
-    &__value-icon img { display: block; height: 1.1rem; width: 1.1rem; }
-    &__value-name { white-space: nowrap; }
-    &__value--open { .me-glow(); }
+    &__value-icon img { display: block; height: 1.2rem; width: 1.2rem; }
+    &__value-name {
+        max-width: 5.6rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    &__value--open { .me-gb-selected(); }
     &__anchor { position: relative; }
 }
 
@@ -261,7 +395,7 @@
     vertical-align: bottom;
     white-space: nowrap;
 }
-.me-card--open { .me-glow(); color: #fff; }
+.me-card--open { .me-gb-selected(); }
 .me-dot {
     background: #ef55ed;
     border-radius: 50%;
@@ -279,8 +413,9 @@
     z-index: 10;
 }
 .me-menu {
-    backdrop-filter: blur(10px);
-    background: rgba(22, 24, 46, 0.97);
+    // opaque, no backdrop-filter: blurring the glows behind it let the pane
+    // ghost through the sheet
+    background: linear-gradient(180deg, #1b1a40, #17163a);
     border: 1px solid rgba(152, 96, 245, 0.45);
     border-radius: 0.9rem;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 16px rgba(152, 96, 245, 0.25);
@@ -295,7 +430,8 @@
 
     &--down {
         left: 0;
-        max-height: 13rem;
+        // from under the cards to just above the pane's bottom edge
+        max-height: 11.4rem;
         top: calc(100% + 0.35rem);
         width: auto;
     }
@@ -516,54 +652,5 @@
         -moz-user-select: none;
         user-select: none;
         width: 100%;
-    }
-}
-
-// Header reset button (left), a round glass twin of the gear (right). The
-// first click arms it (pink + "Reset?"), the second resets the site.
-.me-reset-wrap {
-    display: flex;
-    position: relative;
-}
-.me-reset {
-    align-items: center;
-    background: rgba(152, 96, 245, 0.12);
-    border: 1px solid rgba(152, 96, 245, 0.4);
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(152, 96, 245, 0.3);
-    cursor: pointer;
-    display: flex;
-    height: 2rem;
-    justify-content: center;
-    padding: 0;
-    width: 2rem;
-
-    img {
-        height: 1.05rem;
-        width: 1.05rem;
-    }
-
-    &:disabled {
-        box-shadow: none;
-        cursor: default;
-        opacity: 0.35;
-    }
-
-    &--armed {
-        background: rgba(239, 85, 237, 0.18);
-        border-color: #ef55ed;
-        box-shadow: 0 0 10px rgba(239, 85, 237, 0.45);
-    }
-
-    &__confirm {
-        color: #ef55ed;
-        font-size: @size-text-small;
-        font-weight: 700;
-        left: calc(100% + 0.35rem);
-        pointer-events: none;
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        white-space: nowrap;
     }
 }

@@ -13,9 +13,10 @@ import {keyHint} from './key-hint';
 import {KitIcon} from './kit-icon';
 import type {KitIconName} from './kit-icon';
 import {MODES, engineLabel, modeFor} from './modes';
+import {ResetButton} from './reset-button';
 import {DefaultMenu, ThemeMenu} from './theme-menus';
 
-// MyEyes! popup pane (brand/ui-kit/reference/approved-popup-mockup.png). The
+// MyEyes! popup pane (brand/reference/popup-mockup.png). The
 // top area controls the CURRENT site — edits fork its theme until saved (see
 // utils/named-themes); "Default for new sites" is the global fallback.
 // NB: never name a variable `m` in here — it is Malevic's JSX factory.
@@ -132,13 +133,14 @@ function Sliders(props: {theme: any; change: (t: any) => void}) {
 }
 
 function AiActions() {
-    // Net-new local-model features — stubs until built.
+    // Net-new local-model features — stubs until built: aria-disabled rather
+    // than disabled, so they keep the mockup's look (no dimming) yet do nothing.
     return (
         <div class="me-ai">
-            <button class="me-ai__btn me-ai__btn--enhance" disabled>
+            <button class="me-ai__btn me-ai__btn--enhance" aria-disabled="true" title="AI Enhance: coming soon (on-device)">
                 <span class="me-ai__icon"><KitIcon name="ai-enhance" /></span>AI Enhance
             </button>
-            <button class="me-ai__btn me-ai__btn--clean" disabled>
+            <button class="me-ai__btn me-ai__btn--clean" aria-disabled="true" title="Clean Up: coming soon (on-device)">
                 <span class="me-ai__icon"><KitIcon name="clean-up" /></span>Clean Up
             </button>
         </div>
@@ -166,10 +168,12 @@ export default function MainPage(props: MainPageProps) {
                     <ThemeMenu {...props} onAdvanced={props.onThemeNavClick} />
                 </div>
             </section>
-            <section class="m-section">
+            <section class="m-section me-tune">
                 <Sliders theme={preset.theme} change={preset.change} />
+                <span class="me-tune__divider" />
+                <ResetButton {...props} />
             </section>
-            <section class="m-section">
+            <section class="m-section me-ai-section">
                 <AiActions />
             </section>
             <section class="m-section me-footer">

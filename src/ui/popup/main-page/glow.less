@@ -1,0 +1,156 @@
+// GlowButton: the popup's neon-glass control (brand/reference/popup-mockup.png),
+// built as separate layers rather than one generic box-shadow:
+//
+//   surface     vertical linear gradient + radial "internal lighting"
+//               (a bright upper-left pool, an optional lower-right bounce)
+//   inner edge  inset box-shadows: a lit top edge + a coloured inner glow
+//   ::before    gradient border ring (mask-composite), brightest top-left
+//   ::after     blurred glow, its own layer BEHIND the control
+//
+// Each variant only sets the --gb-* custom properties; states: default,
+// :hover, :focus-visible, selected (.me-gb-selected()), :disabled.
+//
+// Stacking rule for the ::after glow (z-index: -1): the nearest stacking
+// context must be a container painted BEHIND the control (the popup page and
+// header get `isolation: isolate`), and the control itself must not create
+// one: no opacity < 1, filter, backdrop-filter or transform on it.
+
+// The layout border is always @me-gb-border (transparent), whatever ring
+// width a state draws, so lighting a control never shifts the layout.
+@me-gb-border: 2px;
+
+.me-gb() {
+    // glass: the resting look of cards, the pill track, the default bar
+    --gb-surface-top: rgba(66, 60, 138, 0.42);
+    --gb-surface-bottom: rgba(38, 36, 86, 0.42);
+    --gb-light: rgba(205, 190, 255, 0.11);
+    --gb-light-2: rgba(120, 100, 230, 0);
+    --gb-edge: rgba(255, 255, 255, 0.09);
+    --gb-inner: rgba(118, 104, 220, 0.24);
+    --gb-inner-size: 0.7rem;
+    --gb-ring-a: rgba(158, 140, 245, 0.8);
+    --gb-ring-b: rgba(88, 69, 162, 0.9);
+    --gb-ring-c: rgba(112, 92, 200, 0.85);
+    --gb-ring-width: 1px;
+    --gb-glow: #8b5cf6;
+    --gb-glow-opacity: 0;
+    --gb-glow-blur: 11px;
+    --gb-glow-spread: 2px;
+
+    background:
+        radial-gradient(130% 85% at 12% 0%, var(--gb-light), transparent 62%),
+        radial-gradient(110% 80% at 88% 100%, var(--gb-light-2), transparent 66%),
+        linear-gradient(180deg, var(--gb-surface-top), var(--gb-surface-bottom));
+    background-origin: border-box;
+    border: @me-gb-border solid transparent;
+    box-shadow:
+        inset 0 1px 0 var(--gb-edge),
+        inset 0 0 var(--gb-inner-size) var(--gb-inner);
+    position: relative;
+    transition: box-shadow @time-fast, color @time-fast;
+
+    &::before {
+        background: linear-gradient(155deg, var(--gb-ring-a), var(--gb-ring-b) 58%, var(--gb-ring-c));
+        border-radius: inherit;
+        content: "";
+        inset: -@me-gb-border;
+        padding: var(--gb-ring-width);
+        pointer-events: none;
+        position: absolute;
+        // keep only the padding ring: full box minus the content box
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+    }
+
+    &::after {
+        background: var(--gb-glow);
+        border-radius: inherit;
+        content: "";
+        filter: blur(var(--gb-glow-blur));
+        inset: calc(-@me-gb-border - var(--gb-glow-spread));
+        opacity: var(--gb-glow-opacity);
+        pointer-events: none;
+        position: absolute;
+        transition: opacity @time-fast;
+        z-index: -1;
+    }
+
+    // :where() keeps focus/hover at the base specificity, so a selected
+    // control (declared later) keeps its own, stronger lighting
+    &:where(:focus-visible) {
+        outline: none;
+        --gb-ring-a: #fff;
+        --gb-ring-b: #c9b4ff;
+        --gb-ring-width: 2px;
+        --gb-glow-opacity: 0.5;
+    }
+
+    &:disabled {
+        cursor: default;
+        opacity: 0.4;
+        --gb-glow-opacity: 0;
+    }
+}
+
+// interactive glass: a hover lift on top of .me-gb()
+.me-gb-hover() {
+    &:where(:hover:not(:disabled, [aria-disabled="true"])) {
+        --gb-ring-a: rgba(205, 190, 255, 0.95);
+        --gb-inner: rgba(140, 115, 240, 0.36);
+        --gb-glow-opacity: 0.28;
+        color: #fff;
+    }
+}
+
+// lit / selected: white ring, purple light pooling at the edges, outer glow
+.me-gb-selected() {
+    --gb-surface-top: rgba(78, 42, 165, 0.6);
+    --gb-surface-bottom: rgba(84, 42, 176, 0.6);
+    --gb-light: rgba(225, 195, 255, 0.2);
+    --gb-light-2: rgba(150, 70, 245, 0.35);
+    --gb-edge: rgba(255, 255, 255, 0.4);
+    --gb-inner: rgba(146, 72, 245, 0.95);
+    --gb-inner-size: 0.95rem;
+    --gb-ring-a: #fff;
+    --gb-ring-b: #f3eaff;
+    --gb-ring-c: #dcc6ff;
+    --gb-ring-width: 2px;
+    --gb-glow: linear-gradient(135deg, #a46bff, #7c3aed 50%, #c46cff);
+    --gb-glow-opacity: 0.85;
+    color: #fff;
+}
+
+// filled purple call to action (AI Enhance)
+.me-gb-primary() {
+    --gb-surface-top: rgba(140, 76, 226, 0.97);
+    --gb-surface-bottom: rgba(96, 58, 206, 0.97);
+    --gb-light: rgba(255, 215, 255, 0.24);
+    --gb-light-2: rgba(185, 120, 255, 0.3);
+    --gb-edge: rgba(255, 255, 255, 0.5);
+    --gb-inner: rgba(222, 150, 255, 0.5);
+    --gb-inner-size: 0.6rem;
+    --gb-ring-a: #fff4ff;
+    --gb-ring-b: #d77cfc;
+    --gb-ring-c: #b46cf8;
+    --gb-ring-width: 1.5px;
+    --gb-glow: linear-gradient(90deg, #8b5cf6, #c855f0);
+    --gb-glow-opacity: 0.55;
+    color: #fff;
+}
+
+// brighter glass with a cool blue-white rim (Clean Up)
+.me-gb-bright() {
+    --gb-surface-top: rgba(82, 80, 164, 0.8);
+    --gb-surface-bottom: rgba(60, 56, 128, 0.8);
+    --gb-light: rgba(225, 232, 255, 0.16);
+    --gb-inner: rgba(175, 165, 255, 0.28);
+    --gb-edge: rgba(255, 255, 255, 0.28);
+    --gb-ring-a: #d4e3ff;
+    --gb-ring-b: #a190f2;
+    --gb-ring-c: #8f7fe0;
+    --gb-ring-width: 1.5px;
+    --gb-glow: #7c6cf0;
+    --gb-glow-opacity: 0.22;
+    color: #fff;
+}
