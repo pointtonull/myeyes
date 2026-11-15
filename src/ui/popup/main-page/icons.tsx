@@ -20,7 +20,13 @@ export const CodeIcon = () => svg([
     <rect x="3" y="4.5" width="18" height="15" rx="2.5" />,
     <path d="M9.5 10l-2 2 2 2" />,
     <path d="M14.5 10l2 2-2 2" />,
+    // the little yellow sparkle from the mockup's Dynamic card
+    <path d="M19.5 1l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" fill="#fbbf24" stroke="none" />,
 ]);
+
+export const ChevronIcon = () => svg(
+    <path d="M6 9.5l6 6 6-6" stroke-width="2.6" />,
+);
 
 export const FilterIcon = () => svg([
     <circle cx="9.5" cy="10" r="4.5" opacity="0.65" />,
@@ -76,9 +82,16 @@ export const GearIcon = () => svg([
     <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.1 5.1l2.1 2.1M16.8 16.8l2.1 2.1M18.9 5.1l-2.1 2.1M7.2 16.8l-2.1 2.1" />,
 ]);
 
-// Happy glasses (enabled) — smiling eyes.
+// Happy glasses (enabled) — smiling eyes, brand blue->purple->pink gradient.
 export const GlassesHappy = () => (
-    <svg viewBox="0 0 128 72" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <svg viewBox="0 0 128 72" fill="none" stroke="url(#me-glasses-grad)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+        <defs>
+            <linearGradient id="me-glasses-grad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#38bdf8" />
+                <stop offset="0.55" stop-color="#7c6cf0" />
+                <stop offset="1" stop-color="#e879f9" />
+            </linearGradient>
+        </defs>
         <path d="M8 18 L1 11" /><path d="M120 18 L127 11" />
         <path d="M54 20 Q64 10 74 20" />
         <rect x="8" y="6" width="46" height="46" rx="16" />

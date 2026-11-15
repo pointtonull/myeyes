@@ -8,7 +8,7 @@ import {formatPercent} from '../theme/controls/format';
 import {getCurrentThemePreset} from '../theme/utils';
 
 import {
-    CodeIcon, FilterIcon, SlidersIcon, LayersIcon,
+    CodeIcon, FilterIcon, SlidersIcon, LayersIcon, ChevronIcon,
     SunIcon, ContrastIcon, DropletIcon, LeafIcon,
     SparklesIcon, BroomIcon, GlassesHappy, GlassesSquint,
 } from './icons';
@@ -67,7 +67,9 @@ function ModeCards(props: {engine: string; onEngine: (e: ThemeEngine) => void; o
             ))}
             <button class="me-card me-card--theme" onclick={props.onThemeNav}>
                 <span class="me-card__icon"><LayersIcon /></span>
-                <span class="me-card__label">Theme ▾</span>
+                <span class="me-card__label">
+                    Theme <span class="me-chevron"><ChevronIcon /></span>
+                </span>
             </button>
         </div>
     );
@@ -137,7 +139,8 @@ function DefaultForNewSites(props: ViewProps) {
                 props.actions.setTheme({engine: next});
             }}>
                 <span class="me-default__value-icon"><current.Icon /></span>
-                {current.label} ▾
+                {current.label}
+                <span class="me-chevron"><ChevronIcon /></span>
             </button>
         </div>
     );
