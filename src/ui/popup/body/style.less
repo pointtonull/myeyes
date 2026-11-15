@@ -38,10 +38,10 @@
     // gear in a round glass button, like the mockup
     .m-header__gear {
         align-items: center;
-        background: rgba(124, 108, 240, 0.12);
-        border: 1px solid rgba(124, 108, 240, 0.4);
+        background: rgba(152, 96, 245, 0.12);
+        border: 1px solid rgba(152, 96, 245, 0.4);
         border-radius: 50%;
-        box-shadow: 0 0 10px rgba(124, 108, 240, 0.3);
+        box-shadow: 0 0 10px rgba(152, 96, 245, 0.3);
         color: @color-fore;
         cursor: pointer;
         display: flex;
@@ -68,13 +68,16 @@
         margin: 0 auto;
         outline: none;
 
+        // kit logo-mark: wide glasses in a square canvas -> crop the empty band
         &__icon {
-            height: 1.5rem;
-            width: auto;
+            display: block;
+            height: 1.45rem;
+            object-fit: cover;
+            width: 2.7rem;
         }
 
         &__text {
-            background: linear-gradient(90deg, #38bdf8, #7c6cf0, #a855f7);
+            background: linear-gradient(90deg, #46e0f5, #9860f5, #ef55ed);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
@@ -289,7 +292,7 @@
 
 .preview:not(.mobile) {
     body {
-        border-color: rgba(124, 108, 240, 0.5);
+        border-color: rgba(152, 96, 245, 0.5);
         border-radius: 1rem;
     }
 }

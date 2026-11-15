@@ -20,7 +20,7 @@ import type {ThemePatch} from '../../../utils/named-themes';
 import {generateUID} from '../../../utils/uid';
 import {getURLHostOrProtocol, isURLInList} from '../../../utils/url';
 
-import {CheckIcon, ChevronIcon, HomeIcon, LayersIcon} from './icons';
+import {KitIcon} from './kit-icon';
 import {MODES, modeFor} from './modes';
 
 // MyEyes! theme menus (see utils/named-themes for the model):
@@ -39,7 +39,7 @@ function MenuItem(props: {checked?: boolean; icon?: Malevic.Child; label: string
             }}
             onclick={props.onclick}
         >
-            <span class="me-menu__check">{props.checked ? <CheckIcon /> : null}</span>
+            <span class="me-menu__check">{props.checked ? <KitIcon name="check" /> : null}</span>
             {props.icon ? <span class="me-menu__icon">{props.icon}</span> : null}
             <span class="me-menu__label">{props.label}</span>
         </button>
@@ -151,7 +151,7 @@ export function ThemeMenu(props: ViewProps & {onAdvanced: () => void}) {
                     <div class="me-menu__title">Theme for {host}</div>
                     <MenuItem
                         checked={!pinned && site.source !== 'custom'}
-                        icon={<HomeIcon />}
+                        icon={<KitIcon name="home" />}
                         label={`Default for new sites · ${defaultLabel(props)}`}
                         onclick={() => commit(assignSiteTheme(settings, url, host, DEFAULT_THEME_ID))}
                     />
@@ -188,12 +188,12 @@ export function ThemeMenu(props: ViewProps & {onAdvanced: () => void}) {
                 }}
             >
                 <span class="me-card__icon">
-                    <LayersIcon />
+                    <KitIcon name="theme" />
                     {site.modified ? <span class="me-dot" /> : null}
                 </span>
                 <span class="me-card__label">
                     <span class="me-card__name">{site.themeName}</span>
-                    <span class="me-chevron"><ChevronIcon /></span>
+                    <span class="me-chevron"><KitIcon name="chevron-down" /></span>
                 </span>
             </button>
             {menu}
@@ -236,7 +236,7 @@ export function DefaultMenu(props: ViewProps) {
                     {MODES.map((mode) => (
                         <MenuItem
                             checked={onBuiltIn && engine.engine === mode.engine}
-                            icon={<mode.Icon />}
+                            icon={<KitIcon name={mode.icon} />}
                             label={mode.label}
                             onclick={() => commit(setDefaultEngine(settings, mode.engine))}
                         />
@@ -247,12 +247,12 @@ export function DefaultMenu(props: ViewProps) {
                         store.themesOpen = !store.themesOpen;
                         context.refresh();
                     }}>
-                        <span class="me-menu__check">{onBuiltIn ? null : <CheckIcon />}</span>
-                        <span class="me-menu__icon"><LayersIcon /></span>
+                        <span class="me-menu__check">{onBuiltIn ? null : <KitIcon name="check" />}</span>
+                        <span class="me-menu__icon"><KitIcon name="theme" /></span>
                         <span class="me-menu__label">Themes</span>
                         {/* Malevic children must be strings, not numbers */}
                         <span class="me-menu__count">{String(named.length)}</span>
-                        <span class={{'me-menu__caret': true, 'me-menu__caret--open': Boolean(store.themesOpen)}}><ChevronIcon /></span>
+                        <span class={{'me-menu__caret': true, 'me-menu__caret--open': Boolean(store.themesOpen)}}><KitIcon name="chevron-down" /></span>
                     </button>
                     {store.themesOpen ? (
                         <div class="me-menu__submenu">
@@ -274,16 +274,16 @@ export function DefaultMenu(props: ViewProps) {
 
     return (
         <div class="me-default">
-            <span class="me-default__home"><HomeIcon /></span>
+            <span class="me-default__home"><KitIcon name="home" /></span>
             <span class="me-default__label">Default for new sites</span>
             <div class="me-default__anchor">
                 <button class={{'me-default__value': true, 'me-default__value--open': store.open}} onclick={() => {
                     store.open = !store.open;
                     context.refresh();
                 }}>
-                    <span class="me-default__value-icon">{onBuiltIn ? <engine.Icon /> : <LayersIcon />}</span>
+                    <span class="me-default__value-icon">{onBuiltIn ? <KitIcon name={engine.icon} /> : <KitIcon name="theme" />}</span>
                     <span class="me-default__value-name">{onBuiltIn ? engine.label : fallback.name}</span>
-                    <span class="me-chevron"><ChevronIcon /></span>
+                    <span class="me-chevron"><KitIcon name="chevron-down" /></span>
                 </button>
                 {menu}
             </div>

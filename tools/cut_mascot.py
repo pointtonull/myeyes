@@ -29,7 +29,7 @@ OUT = os.path.join(REPO, "src", "ui", "assets", "images", "myeyes-mascot.png")
 BOX = (0.03, 0.085, 0.395, 0.312)
 FILL_T = 70.0   # colour distance below which a border-connected pixel is "background"
 CLEAR_T = 18.0  # at/below this distance the pixel is fully transparent
-PANE = (0x16, 0x18, 0x2e)
+PANE = (0x15, 0x15, 0x2f)
 # laptop lid + base, in crop coordinates (inset ~3px from the bright rim)
 LAPTOP = [(47, 153), (192, 170), (212, 236), (290, 250), (298, 258),
           (225, 281), (78, 257)]

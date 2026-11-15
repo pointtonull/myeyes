@@ -1,12 +1,12 @@
 import {ThemeEngine} from '../../../generators/theme-engines';
 
-import {CodeIcon, FilterIcon, SlidersIcon} from './icons';
+import type {KitIconName} from './kit-icon';
 
 // The rendering engines offered by the MyEyes! pane (mode cards + default menu).
-export const MODES = [
-    {engine: ThemeEngine.dynamicTheme, label: 'Dynamic', Icon: CodeIcon},
-    {engine: ThemeEngine.cssFilter, label: 'Filter+', Icon: FilterIcon},
-    {engine: ThemeEngine.staticTheme, label: 'Custom', Icon: SlidersIcon},
+export const MODES: Array<{engine: ThemeEngine; label: string; icon: KitIconName}> = [
+    {engine: ThemeEngine.dynamicTheme, label: 'Dynamic', icon: 'dynamic'},
+    {engine: ThemeEngine.cssFilter, label: 'Filter+', icon: 'filter-plus'},
+    {engine: ThemeEngine.staticTheme, label: 'Custom', icon: 'custom'},
 ];
 
 export type Mode = typeof MODES[number];

@@ -1,17 +1,19 @@
 @import "../../theme.less";
 
-// --- MyEyes! pane (phase 2: glass + neon, per brand/reference/popup-mockup.png)
-@me-accent: #7c6cf0;
-@me-glass-bg: rgba(124, 108, 240, 0.07);
-@me-glass-border: rgba(124, 108, 240, 0.22);
+// --- MyEyes! pane — glass + neon per brand/ui-kit (palette.json + approved mockup)
+// palette: bg #15152f · surface #26234d · border #6549a7 · purple #9860f5
+//          cyan #46e0f5 · pink #ef55ed · text #f6f2ff · muted #c8bce5 · gold #ffd27b
+@me-accent: #9860f5;
+@me-glass-bg: rgba(38, 35, 77, 0.55);
+@me-glass-border: rgba(101, 73, 167, 0.55);
 .me-glass() {
     background: @me-glass-bg;
     border: 1px solid @me-glass-border;
     backdrop-filter: blur(6px);
 }
 .me-glow() {
-    border-color: @me-accent;
-    box-shadow: 0 0 14px rgba(124, 108, 240, 0.55), inset 0 0 10px rgba(124, 108, 240, 0.12);
+    border-color: #c9a8ff;
+    box-shadow: 0 0 14px rgba(152, 96, 245, 0.65), inset 0 0 10px rgba(152, 96, 245, 0.18);
 }
 
 .me-top {
@@ -30,7 +32,7 @@
     display: inline-flex;
     vertical-align: middle;
 
-    svg { height: 0.8rem; width: 0.8rem; }
+    img { height: 0.8rem; width: 0.8rem; }
 }
 
 .me-pills {
@@ -50,9 +52,12 @@
     gap: 0.2rem;
     padding: 0.6rem 0.4rem;
 
-    &__icon svg {
-        height: 1.75rem;
-        width: 3.1rem;
+    // kit glasses sit in a square 64x64 canvas: crop the empty top/bottom
+    &__icon img {
+        display: block;
+        height: 1.9rem;
+        object-fit: cover;
+        width: 3.4rem;
     }
     &__label {
         font-size: @size-text-large;
@@ -62,7 +67,7 @@
 .me-pill--enabled.me-pill--active {
     .me-glow();
     color: #fff;
-    .me-pill__icon svg { filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.6)); }
+    .me-pill__icon img { filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.6)); }
 }
 .me-pill--disabled.me-pill--active {
     border-color: @color-fore;
@@ -86,7 +91,7 @@
     gap: 0.3rem;
     padding: 0.7rem 0.2rem;
 
-    &__icon svg { height: 1.8rem; width: 1.8rem; }
+    &__icon img { height: 1.8rem; width: 1.8rem; }
     &__label { font-size: @size-text-normal; font-weight: 700; white-space: nowrap; }
 }
 .me-card--active {
@@ -105,7 +110,7 @@
     flex-direction: column;
     gap: 0.3rem;
 
-    &__icon svg { height: 1.2rem; width: 1.2rem; }
+    &__icon img { height: 1.2rem; width: 1.2rem; }
     &__label { font-size: @size-text-small; white-space: nowrap; }
 
     // DR's slider restyled: chunky rounded track, round glowing knob, no number
@@ -137,7 +142,7 @@
     .slider--active .slider__thumb {
         background-color: #fff;
         border-radius: 50%;
-        box-shadow: 0 0 6px rgba(255, 255, 255, 0.5), 0 0 12px rgba(124, 108, 240, 0.65);
+        box-shadow: 0 0 6px rgba(255, 255, 255, 0.5), 0 0 12px rgba(152, 96, 245, 0.65);
         height: 0.9rem;
         margin-left: -0.45rem;
         margin-top: 0.05rem;
@@ -145,11 +150,11 @@
     }
     .slider__thumb__value { display: none; }
 
-    &--brightness .slider__track__fill { background: linear-gradient(90deg, #7c6cf0, #a855f7); }
+    &--brightness .slider__track__fill { background: linear-gradient(90deg, #9860f5, #a855f7); }
     &--contrast .slider__track__fill { background: linear-gradient(90deg, #5b5bd6, #8b7cf6); }
-    &--saturation .slider__track__fill { background: linear-gradient(90deg, #22d3ee, #60a5fa); }
-    &--sepia .slider__track__fill { background: linear-gradient(90deg, #fcd34d, #f0a050); }
-    &--saturation .me-slider__icon { color: #38bdf8; }
+    &--saturation .slider__track__fill { background: linear-gradient(90deg, #46e0f5, #60a5fa); }
+    &--sepia .slider__track__fill { background: linear-gradient(90deg, #ffd27b, #f0a050); }
+    &--saturation .me-slider__icon { color: #46e0f5; }
     &--sepia .me-slider__icon { color: #f0b457; }
 }
 
@@ -171,15 +176,15 @@
     opacity: 0.9;
     padding: 0.7rem;
 
-    .me-ai__icon svg { height: 1.2rem; width: 1.2rem; }
+    .me-ai__icon img { height: 1.2rem; width: 1.2rem; }
 }
 .me-ai__btn--enhance {
-    background: linear-gradient(135deg, #7c6cf0, #a855f7);
+    background: linear-gradient(135deg, #9860f5, #a855f7);
     border-color: transparent;
-    box-shadow: 0 0 14px rgba(124, 108, 240, 0.5);
+    box-shadow: 0 0 14px rgba(152, 96, 245, 0.5);
     color: #fff;
 
-    .me-ai__icon { color: #f0abfc; }
+    .me-ai__icon { color: #ef55ed; }
 }
 
 .me-footer {
@@ -194,12 +199,12 @@
     gap: 0.5rem;
     padding: 0.45rem 0.45rem 0.45rem 0.75rem;
 
-    &__home svg { display: block; height: 1.3rem; width: 1.3rem; }
+    &__home img { display: block; height: 1.3rem; width: 1.3rem; }
     &__label { flex: auto; font-weight: 600; white-space: nowrap; }
     &__value {
         align-items: center;
-        background: rgba(124, 108, 240, 0.14);
-        border: 1px solid rgba(124, 108, 240, 0.55);
+        background: rgba(152, 96, 245, 0.14);
+        border: 1px solid rgba(152, 96, 245, 0.55);
         border-radius: 1rem;
         color: #fff;
         cursor: pointer;
@@ -209,14 +214,14 @@
         padding: 0.35rem 0.6rem;
         white-space: nowrap;
     }
-    &__value-icon svg { display: block; height: 1.1rem; width: 1.1rem; }
+    &__value-icon img { display: block; height: 1.1rem; width: 1.1rem; }
     &__value-name { white-space: nowrap; }
     &__value--open { .me-glow(); }
     &__anchor { position: relative; }
 }
 
 // --- Theme card + menus (named themes) -------------------------------------
-@me-muted: #8f8cc4;
+@me-muted: #c8bce5;
 
 // the Theme menu is anchored to the whole cards row (not the narrow card), so
 // it opens as a full-width sheet that fits in the pane below the cards
@@ -237,9 +242,9 @@
 }
 .me-card--open { .me-glow(); color: #fff; }
 .me-dot {
-    background: #f0abfc;
+    background: #ef55ed;
     border-radius: 50%;
-    box-shadow: 0 0 6px #f0abfc;
+    box-shadow: 0 0 6px #ef55ed;
     height: 0.5rem;
     position: absolute;
     right: -0.25rem;
@@ -255,9 +260,9 @@
 .me-menu {
     backdrop-filter: blur(10px);
     background: rgba(22, 24, 46, 0.97);
-    border: 1px solid rgba(124, 108, 240, 0.45);
+    border: 1px solid rgba(152, 96, 245, 0.45);
     border-radius: 0.9rem;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 16px rgba(124, 108, 240, 0.25);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 16px rgba(152, 96, 245, 0.25);
     max-height: 19rem;
     overflow-y: auto;
     padding: 0.35rem;
@@ -276,7 +281,7 @@
     &--up { bottom: calc(100% + 0.4rem); }
 
     &__section + &__section {
-        border-top: 1px solid rgba(124, 108, 240, 0.18);
+        border-top: 1px solid rgba(152, 96, 245, 0.18);
         margin-top: 0.2rem;
         padding-top: 0.2rem;
     }
@@ -306,23 +311,23 @@
         text-align: left;
         width: 100%;
 
-        &:hover { background: rgba(124, 108, 240, 0.18); color: #fff; }
+        &:hover { background: rgba(152, 96, 245, 0.18); color: #fff; }
         &--checked { color: #fff; }
         &--muted { color: @me-muted; }
     }
     &__check {
-        color: #38bdf8;
+        color: #46e0f5;
         display: inline-flex;
         flex: none;
         width: 1rem;
 
-        svg { height: 1rem; width: 1rem; }
+        img { height: 1rem; width: 1rem; }
     }
     &__icon {
         display: inline-flex;
         flex: none;
 
-        svg { height: 1rem; width: 1rem; }
+        img { height: 1rem; width: 1rem; }
     }
     &__label {
         flex: auto;
@@ -336,11 +341,11 @@
         transform: rotate(-90deg);
         transition: transform @time-fast;
 
-        svg { height: 0.8rem; width: 0.8rem; }
+        img { height: 0.8rem; width: 0.8rem; }
         &--open { transform: none; }
     }
     &__submenu {
-        border-left: 1px solid rgba(124, 108, 240, 0.25);
+        border-left: 1px solid rgba(152, 96, 245, 0.25);
         margin-left: 0.95rem;
         padding-left: 0.2rem;
     }
@@ -356,7 +361,7 @@
     }
     &__input {
         background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(124, 108, 240, 0.5);
+        border: 1px solid rgba(152, 96, 245, 0.5);
         border-radius: 0.5rem;
         color: #fff;
         flex: auto;
@@ -365,10 +370,10 @@
         outline: none;
         padding: 0.3rem 0.45rem;
 
-        &:focus { border-color: @me-accent; box-shadow: 0 0 8px rgba(124, 108, 240, 0.5); }
+        &:focus { border-color: @me-accent; box-shadow: 0 0 8px rgba(152, 96, 245, 0.5); }
     }
     &__ok {
-        background: linear-gradient(135deg, #7c6cf0, #a855f7);
+        background: linear-gradient(135deg, #9860f5, #a855f7);
         border: none;
         border-radius: 0.5rem;
         color: #fff;

@@ -7,10 +7,8 @@ import {Slider} from '../../controls';
 import {formatPercent} from '../theme/controls/format';
 import {getCurrentThemePreset} from '../theme/utils';
 
-import {
-    SunIcon, ContrastIcon, DropletIcon, LeafIcon,
-    SparklesIcon, BroomIcon, GlassesHappy, GlassesSquint,
-} from './icons';
+import {KitIcon} from './kit-icon';
+import type {KitIconName} from './kit-icon';
 import {MODES} from './modes';
 import {DefaultMenu, ThemeMenu} from './theme-menus';
 
@@ -35,14 +33,14 @@ function EnablePills(props: ViewProps) {
                 class={{'me-pill': true, 'me-pill--disabled': true, 'me-pill--active': !isPageEnabled}}
                 onclick={() => set(false)}
             >
-                <span class="me-pill__icon"><GlassesSquint /></span>
+                <span class="me-pill__icon"><KitIcon name="mode-disabled" /></span>
                 <span class="me-pill__label">Disabled</span>
             </button>
             <button
                 class={{'me-pill': true, 'me-pill--enabled': true, 'me-pill--active': isPageEnabled}}
                 onclick={() => set(true)}
             >
-                <span class="me-pill__icon"><GlassesHappy /></span>
+                <span class="me-pill__icon"><KitIcon name="mode-enabled" /></span>
                 <span class="me-pill__label">Enabled</span>
             </button>
         </div>
@@ -57,7 +55,7 @@ function EngineCards(props: {engine: string; onEngine: (e: ThemeEngine) => void}
                     class={{'me-card': true, 'me-card--active': props.engine === mode.engine}}
                     onclick={() => props.onEngine(mode.engine)}
                 >
-                    <span class="me-card__icon"><mode.Icon /></span>
+                    <span class="me-card__icon"><KitIcon name={mode.icon} /></span>
                     <span class="me-card__label">{mode.label}</span>
                 </button>
             ))}
@@ -65,10 +63,10 @@ function EngineCards(props: {engine: string; onEngine: (e: ThemeEngine) => void}
     );
 }
 
-function MeSlider(props: {trackKey: string; label: string; Icon: () => Malevic.Child; value: number; min: number; max: number; onChange: (v: number) => void}) {
+function MeSlider(props: {trackKey: string; label: string; icon: KitIconName; value: number; min: number; max: number; onChange: (v: number) => void}) {
     return (
         <div class={`me-slider me-slider--${props.trackKey}`}>
-            <span class="me-slider__icon"><props.Icon /></span>
+            <span class="me-slider__icon"><KitIcon name={props.icon} /></span>
             <label class="me-slider__label">{props.label}</label>
             <Slider
                 value={props.value} min={props.min} max={props.max} step={1}
@@ -82,13 +80,13 @@ function Sliders(props: {theme: any; change: (t: any) => void}) {
     const {theme, change} = props;
     return (
         <div class="me-sliders">
-            <MeSlider trackKey="brightness" label="Brightness" Icon={SunIcon}
+            <MeSlider trackKey="brightness" label="Brightness" icon="brightness"
                 value={theme.brightness} min={50} max={150} onChange={(v) => change({brightness: v})} />
-            <MeSlider trackKey="contrast" label="Contrast" Icon={ContrastIcon}
+            <MeSlider trackKey="contrast" label="Contrast" icon="contrast"
                 value={theme.contrast} min={50} max={150} onChange={(v) => change({contrast: v})} />
-            <MeSlider trackKey="saturation" label="Saturation" Icon={DropletIcon}
+            <MeSlider trackKey="saturation" label="Saturation" icon="saturation"
                 value={100 - theme.grayscale} min={0} max={100} onChange={(v) => change({grayscale: 100 - v})} />
-            <MeSlider trackKey="sepia" label="Sepia" Icon={LeafIcon}
+            <MeSlider trackKey="sepia" label="Sepia" icon="sepia"
                 value={theme.sepia} min={0} max={100} onChange={(v) => change({sepia: v})} />
         </div>
     );
@@ -99,10 +97,10 @@ function AiActions() {
     return (
         <div class="me-ai">
             <button class="me-ai__btn me-ai__btn--enhance" disabled>
-                <span class="me-ai__icon"><SparklesIcon /></span>AI Enhance
+                <span class="me-ai__icon"><KitIcon name="ai-enhance" /></span>AI Enhance
             </button>
             <button class="me-ai__btn me-ai__btn--clean" disabled>
-                <span class="me-ai__icon"><BroomIcon /></span>Clean Up
+                <span class="me-ai__icon"><KitIcon name="clean-up" /></span>Clean Up
             </button>
         </div>
     );

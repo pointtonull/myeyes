@@ -94,7 +94,7 @@ def mock_data(scenario="plain"):
 
 
 MOCK_SCRIPT = """
-<style>html{{background:#16182e}}body{{margin:0 !important}}</style>
+<style>html{{background:#15152f}}body{{margin:0 !important}}</style>
 <script>
 function meShowErr(msg, stack) {{
   var p = document.createElement('pre');
@@ -190,7 +190,7 @@ def serve(directory, port):
     return httpd
 
 
-def crop_popup(png_path, bg=(0x16, 0x18, 0x2e), pad=6):
+def crop_popup(png_path, bg=(0x15, 0x15, 0x2f), pad=6):
     """Crop the full-page shot tightly to the popup (its content bounding box)."""
     try:
         from PIL import Image, ImageChops

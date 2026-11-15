@@ -17,7 +17,7 @@ interface IndexStore {
 function Logo() {
     return (
         <span class="m-logo">
-            <img class="m-logo__icon" src="../../icons/me_active_38.png" alt="" />
+            <img class="m-logo__icon" src="../assets/images/myeyes/brand/logo-mark.svg" alt="" />
             <span class="m-logo__text">MyEyes!</span>
         </span>
     );
