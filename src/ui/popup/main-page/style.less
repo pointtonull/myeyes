@@ -23,6 +23,7 @@
 }
 // one fixed box for every mood so the pills don't shift when it changes
 .me-mascot {
+    box-sizing: border-box; // the stressed mood's padding must not widen the box
     flex: none;
     height: 5.6rem;
     margin: -0.4rem -0.2rem -0.4rem -0.4rem;
