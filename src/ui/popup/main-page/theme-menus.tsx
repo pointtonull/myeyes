@@ -250,7 +250,8 @@ export function DefaultMenu(props: ViewProps) {
                         <span class="me-menu__check">{onBuiltIn ? null : <CheckIcon />}</span>
                         <span class="me-menu__icon"><LayersIcon /></span>
                         <span class="me-menu__label">Themes</span>
-                        <span class="me-menu__count">{named.length}</span>
+                        {/* Malevic children must be strings, not numbers */}
+                        <span class="me-menu__count">{String(named.length)}</span>
                         <span class={{'me-menu__caret': true, 'me-menu__caret--open': Boolean(store.themesOpen)}}><ChevronIcon /></span>
                     </button>
                     {store.themesOpen ? (

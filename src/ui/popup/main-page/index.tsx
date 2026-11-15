@@ -121,7 +121,7 @@ export default function MainPage(props: MainPageProps) {
                 <img class="me-mascot" src="../assets/images/myeyes-mascot.png" alt="" />
                 <EnablePills {...props} />
             </section>
-            <section class="m-section">
+            <section class="m-section me-modes-section">
                 <div class="me-modes">
                     <EngineCards
                         engine={preset.theme.engine}

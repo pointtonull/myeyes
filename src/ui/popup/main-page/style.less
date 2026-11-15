@@ -218,9 +218,11 @@
 // --- Theme card + menus (named themes) -------------------------------------
 @me-muted: #8f8cc4;
 
+// the Theme menu is anchored to the whole cards row (not the narrow card), so
+// it opens as a full-width sheet that fits in the pane below the cards
+.me-modes-section { position: relative; }
 .me-theme {
     display: flex;
-    position: relative;
 
     > .me-card { flex: auto; min-width: 0; }
 }
@@ -265,13 +267,18 @@
     width: 14.5rem;
     z-index: 11;
 
-    &--down { top: calc(100% + 0.4rem); }
+    &--down {
+        left: 0;
+        max-height: 13rem;
+        top: calc(100% + 0.35rem);
+        width: auto;
+    }
     &--up { bottom: calc(100% + 0.4rem); }
 
     &__section + &__section {
         border-top: 1px solid rgba(124, 108, 240, 0.18);
-        margin-top: 0.3rem;
-        padding-top: 0.3rem;
+        margin-top: 0.2rem;
+        padding-top: 0.2rem;
     }
     &__title {
         color: @me-muted;
@@ -295,7 +302,7 @@
         font-size: @size-text-normal;
         font-weight: 600;
         gap: 0.4rem;
-        padding: 0.4rem 0.5rem;
+        padding: 0.32rem 0.5rem;
         text-align: left;
         width: 100%;
 
