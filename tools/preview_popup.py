@@ -163,7 +163,7 @@ def main():
         time.sleep(0.3)
         result = subprocess.run(
             [os.path.expanduser("~/bin/foxmcp.screenshot"), url,
-             "--out", out, "--wait", str(args.wait)],
+             "--out", out, "--wait", str(args.wait), "--active"],
             check=True, capture_output=True, text=True,
         )
         produced = result.stdout.strip().splitlines()[-1] if result.stdout.strip() else ""
