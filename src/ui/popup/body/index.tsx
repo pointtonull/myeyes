@@ -5,8 +5,8 @@ import type {ViewProps} from '../../../definitions';
 import {isMobile} from '../../../utils/platform';
 import {Overlay} from '../../controls';
 import {openExtensionPage} from '../../utils';
+import {SettingsIcon} from '../../icons';
 import MainPage from '../main-page';
-import {GearIcon} from '../main-page/icons';
 import {Page, PageViewer} from '../page-viewer';
 import ThemePage from '../theme/page';
 
@@ -114,7 +114,7 @@ export default function Body(props: ViewProps) {
                 <span class="m-header__side" />
                 <Logo />
                 <button class="m-header__side m-header__gear" onclick={() => openExtensionPage('options')} aria-label="Settings">
-                    <GearIcon />
+                    <SettingsIcon />
                 </button>
             </header>
             <section class="m-section pages-section">
