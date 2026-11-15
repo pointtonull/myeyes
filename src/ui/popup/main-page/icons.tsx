@@ -29,9 +29,9 @@ export const ChevronIcon = () => svg(
 );
 
 export const FilterIcon = () => svg([
-    <circle cx="9.5" cy="10" r="4.5" opacity="0.65" />,
-    <circle cx="14.5" cy="10" r="4.5" opacity="0.65" />,
-    <circle cx="12" cy="14.5" r="4.5" opacity="0.65" />,
+    <circle cx="9.5" cy="10" r="4.5" fill="#c084fc" opacity="0.8" />,
+    <circle cx="14.5" cy="10" r="4.5" fill="#818cf8" opacity="0.8" />,
+    <circle cx="12" cy="14.5" r="4.5" fill="#60a5fa" opacity="0.8" />,
 ], {fill: true});
 
 export const SlidersIcon = () => svg([
