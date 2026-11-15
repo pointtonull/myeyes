@@ -6,23 +6,57 @@
 
 ---
 
-**MyEyes!** is an open-source (MIT) browser extension that turns any site dark — proactively, keyboard-driven, and easy on photophobic eyes. It's a rebranded fork of [Dark Reader](https://github.com/darkreader/darkreader): it keeps Dark Reader's proven dynamic-theme engine and its community-maintained per-site fixes (fetched and cached at runtime), wrapped in a deliberately minimal UI.
+**MyEyes!** is an open-source (MIT) browser extension that turns any site dark — proactively, keyboard-driven, and easy on photophobic eyes. It's a rebranded fork of [Dark Reader](https://github.com/darkreader/darkreader): it keeps Dark Reader's proven dynamic-theme engine and its community-maintained per-site fixes (fetched and cached at runtime), wrapped in a deliberately small, calm UI: one pane, no tabs, no wall of sliders.
+
+<p align="center">
+  <img width="260" alt="The MyEyes! popup" src="brand/screenshots/popup.png">
+  &nbsp;
+  <img width="260" alt="The popup on a site with its own tweaks: Custom is lit and Reset is available" src="brand/screenshots/popup-custom.png">
+  &nbsp;
+  <img width="260" alt="The Theme menu, listing saved themes" src="brand/screenshots/popup-theme-menu.png">
+</p>
 
 ## Features
 
-- 🌙 Proactive dark mode for every website — Dark Reader's dynamic engine
-- 🔄 Community per-site fixes, fetched & cached from upstream at runtime
-- 🧩 Minimal, keyboard-first UI — no tabs, no clutter
+**Dark by default**
 
-**Roadmap:** named reusable themes · keyboard commands for all toggles · community userstyles (UserStyles.world / USO) · AI-enhanced page adaptation using **local, on-device models** (declutter, improve readability — nothing leaves your machine).
+- 🌙 Proactive dark mode for every website, using Dark Reader's dynamic engine, or **Filter+** (a simpler, filter-based engine) when you prefer it.
+- 🔄 Community per-site fixes, fetched and cached from upstream at runtime, with a bundled offline fallback, so popular sites keep looking right.
 
-## Screenshots
+**One pane, per site**
+
+- **Disabled · Auto · Enabled** for the current site. *Auto* (every site's default) darkens a page unless it's already dark, *Enabled* always darkens it, *Disabled* leaves it alone.
+- **Dynamic · Filter+ · Custom · Theme** cards show where the site's look comes from, with **Brightness, Contrast, Saturation and Sepia** sliders under them.
+- **Named, reusable themes.** Move a slider and the site quietly forks its theme (a pink dot marks unsaved changes). *Save*, *Save as…* or *Revert* from the Theme menu, pin any saved theme to any site, or make one the **Default for new sites**.
+- **Tweaks aren't lost by accident.** Switching cards or themes parks a site's own settings, and the Custom card brings them back. **Reset** (two clicks) drops them for good.
+
+**Keyboard-first**
+
+| Shortcut | Does |
+| --- | --- |
+| `Alt+Shift+A` | Toggle darkening for this site |
+| `Alt+Shift+T` | Next theme for this site: Dynamic → Filter+ → Custom (if the site has tweaks) → each saved theme → … |
+| *unbound* | Turn MyEyes! on or off everywhere |
+| *unbound* | Next default theme for new sites |
+
+(`Alt` is `Option` on macOS.) Rebind or add the two unbound ones in the extension's Hotkeys options, in Firefox at `about:addons` → ⚙ → *Manage Extension Shortcuts*, or in Chrome at `chrome://extensions/shortcuts`.
+
+**Built for sensitive eyes**
+
+- Every shortcut answers with a small **on-screen confirmation**: what changed, and on which site. It's click-through, never takes focus, honors *reduce motion*, and **stays dark even on pages a filter engine inverts**, so the confirmation itself can't flash you.
 
 <p align="center">
-  <img height="340" alt="MyEyes! popup" src="brand/screenshots/popup.png">
-  &nbsp;&nbsp;
-  <img height="340" alt="Hacker News darkened by MyEyes!" src="brand/screenshots/hacker-news-dark.png">
+  <img width="540" alt="On-screen confirmations: Filter+ on example.com, Auto on news.ycombinator.com, MyEyes! off" src="brand/screenshots/osd.png">
 </p>
+
+<p align="center">
+  <img width="420" alt="Hacker News darkened by MyEyes!" src="brand/screenshots/hacker-news-dark.png">
+</p>
+
+## Roadmap
+
+- **Community userstyles** (UserStyles.world / USO-archive) as a second per-site source next to Dark Reader's fixes. A UserCSS reader that sanitizes untrusted community CSS is in the tree; fetching, caching and per-site resolution are next.
+- **AI-enhanced page adaptation using local, on-device models** (declutter, improve readability; nothing leaves your machine). *AI Enhance* and *Clean Up* are placeholders in the popup until this lands. A render metric that scores glare against retained page structure is in the tree to judge the results: models advise, pixels decide.
 
 ## Build
 
@@ -30,8 +64,10 @@ Requires [Node.js](https://nodejs.org/) (LTS+).
 
 ```sh
 npm install
-npm run build      # release build -> build/release/
-npm run debug      # unpacked build -> build/debug/<browser>/
+npm run build        # release build -> build/release/
+npm run debug        # unpacked build -> build/debug/<browser>/
+npm run debug:watch  # same, rebuilt as you edit
+npm test             # unit tests
 ```
 
 Load `build/debug/firefox` via `about:debugging` → *Load Temporary Add-on*.
