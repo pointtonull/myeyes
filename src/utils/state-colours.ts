@@ -27,9 +27,9 @@ import type {RGBA} from './color';
 export type StateKind = 'background' | 'text';
 
 /** Theme default (0..100). 0 = Dark Reader's own mapping, unchanged. */
-export const DEFAULT_STATE_COLOURS = 50;
+export const DEFAULT_STATE_COLOURS = 72; // Carlos, on Gmail: 50 "enoughish", 72 preferred
 
-/** Chroma (OKLab) of the tint at strength 100; 50 gives 0.06. */
+/** Chroma (OKLab) of the tint at strength 100; 50 gives 0.06, the default 72 about 0.086. */
 const MAX_CHROMA = 0.12;
 /** Distance from the reference at which the tint is full. */
 const KNEE = 0.08;
