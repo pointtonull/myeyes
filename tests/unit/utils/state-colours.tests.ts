@@ -63,6 +63,15 @@ describe('state colours: states stay distinguishable without adding light', () =
         expect(stateTint(hex('#f9dedc'), red, 'background', 100)).toBe(red);
     });
 
+    it('returns whole channel values (a fraction makes the engine write an invalid hex colour)', () => {
+        for (const [o, m] of [[READ, DR.read], [HOVER, DR.hover], [SELECTED, DR.selected]] as const) {
+            const out = tint(o, m, 100);
+            expect(out).not.toBe(m);
+            expect([out.r, out.g, out.b].every(Number.isInteger)).toBe(true);
+        }
+        expect([...Object.values(stateTint(hex('#808080'), hex('#a0a0a0'), 'text', 100))].slice(0, 3).every(Number.isInteger)).toBe(true);
+    });
+
     it('stays in gamut and keeps alpha', () => {
         const out = stateTint(hex('#c2dbff', 0.5), hex('#050608', 0.5), 'background', 100);
         expect(out.a).toBe(0.5);

@@ -85,7 +85,9 @@ function modifyColorWithCache(rgb: RGBA, theme: Theme, modifyHSL: HSLModifyFunct
     let out: RGBA = {r: rf, g: gf, b: bf, a};
     const strength = theme.stateColours ?? DEFAULT_STATE_COLOURS;
     if (state && theme.mode === 1 && strength > 0) {
-        out = stateTint(rgb, out, state, strength);
+        const tinted = stateTint(rgb, out, state, strength);
+        // whole numbers only: rgbToHexString would emit an invalid colour for fractions
+        out = {r: Math.round(tinted.r), g: Math.round(tinted.g), b: Math.round(tinted.b), a: tinted.a};
     }
 
     const color = (out.a === 1 ?

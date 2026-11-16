@@ -126,6 +126,8 @@ export function stateTint(original: RGBA, mapped: RGBA, kind: StateKind, strengt
         }
     }
     const full = oklabToRgb(L, chroma * Math.cos(hue), chroma * Math.sin(hue));
-    const [r, g, b] = (inGamut(full) ? full : best).map((v) => Math.min(255, Math.max(0, v)));
+    // whole channel values: the engine formats colours as hex, and a fractional channel
+    // ("#14.1194…") is an invalid colour, which the browser drops (the background vanishes)
+    const [r, g, b] = (inGamut(full) ? full : best).map((v) => Math.round(Math.min(255, Math.max(0, v))));
     return {r, g, b, a: mapped.a};
 }
