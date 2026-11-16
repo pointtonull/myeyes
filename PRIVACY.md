@@ -11,6 +11,8 @@ The extension reads and restyles the pages you visit entirely in your browser, t
 1. **Per-site fixes.** The extension downloads the community-maintained per-site fix files of the open-source Dark Reader project from `raw.githubusercontent.com/darkreader/darkreader`. These requests contain no page addresses or personal data. As with any download, GitHub can see your IP address.
 2. **AI Enhance, only when you ask for it** (the popup button or `Alt+Shift+E`). The extension downloads the public style index from `userstyles.world`, then the community style files that match the current site. The page address itself is never sent, but the style numbers requested can hint at which site you used it on.
 
+Separately, Firefox itself (not the extension) periodically checks `pointtonull.github.io/myeyes/updates.json` for a newer version, which is how MyEyes! updates itself. That request carries no information about you or your browsing; as with any download, GitHub can see your IP address.
+
 Nothing else leaves your browser.
 
 ## Questions

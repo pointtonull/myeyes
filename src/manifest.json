@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "MyEyes!",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "author": "Carlos Cabrera",
     "description": "__MSG_extension_description__",
     "default_locale": "en",

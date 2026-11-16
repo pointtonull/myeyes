@@ -1,6 +1,6 @@
 {
   "name": "myeyes",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MyEyes! — accessibility-first dark mode for every website",
   "scripts": {
     "api": "node --max-old-space-size=3072 tasks/cli.js build --api",
