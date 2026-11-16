@@ -2,7 +2,7 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "myeyes@pointtonull.github.io",
-            "update_url": "https://pointtonull.github.io/myeyes/updates.json",
+            "update_url": "https://www.pointtonull.dev/myeyes/updates.json",
             "strict_min_version": "140.0",
             "data_collection_permissions": {
                 "required": [
