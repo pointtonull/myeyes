@@ -299,13 +299,15 @@
     gap: 0.6rem;
     grid-template-columns: 1fr 1fr;
 }
-// AI Enhance / Clean Up: not built yet, so aria-disabled (no :disabled
-// dimming) — they keep the mockup's look but do nothing
+// AI Enhance works (background/glare-fixer): clickable, with hover / press
+// feedback. Clean Up is still a stub (aria-disabled): dimmed, so the two can't
+// be confused.
 .me-ai__btn {
     .me-gb();
+    .me-gb-hover();
     align-items: center;
     border-radius: 1.1rem;
-    cursor: help;
+    cursor: pointer;
     display: flex;
     font-size: @size-text-large;
     font-weight: 700;
@@ -315,6 +317,14 @@
     padding: 0.4rem 0.6rem;
 
     .me-ai__icon img { display: block; height: 1.35rem; width: 1.35rem; }
+
+    &:active:not([aria-disabled="true"]) { transform: translateY(1px); }
+    &:focus-visible { outline: 2px solid #f1e4ff; outline-offset: 2px; }
+    &[aria-disabled="true"] {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+    &--busy { cursor: progress; }
 }
 // both filled purple (popup-mockup.png v3)
 .me-ai__btn--enhance,

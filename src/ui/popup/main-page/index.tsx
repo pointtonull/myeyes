@@ -1,4 +1,5 @@
 import {m} from 'malevic';
+import {getContext} from 'malevic/dom';
 
 import type {ViewProps} from '../../../definitions';
 import {customizeSite, hasSiteTweaks, pickSiteEngine, siteMode} from '../../../utils/named-themes';
@@ -132,18 +133,36 @@ function Sliders(props: {theme: any; change: (t: any) => void}) {
     );
 }
 
+const ENHANCE_BUSY_MS = 3500;
+
 function AiActions(props: ViewProps) {
     // AI Enhance: find the brightest thing left on this page and fix it
-    // (background/glare-fixer; progress and result show on the page's OSD).
-    // Clean Up is still a stub: aria-disabled keeps the mockup's look yet does nothing.
+    // (background/glare-fixer). Progress and result show on the page's OSD,
+    // behind the popup, so the button itself acknowledges the press for a
+    // few seconds. Clean Up is still a stub (aria-disabled, dimmed).
+    const context = getContext();
+    const store: {busy?: boolean} = context.store;
+    const hint = keyHint(props, 'enhanceSite');
+    function enhance() {
+        if (store.busy) {
+            return;
+        }
+        store.busy = true;
+        props.actions.enhanceSite();
+        context.refresh();
+        setTimeout(() => {
+            store.busy = false;
+            context.refresh();
+        }, ENHANCE_BUSY_MS);
+    }
     return (
         <div class="me-ai">
             <button
-                class="me-ai__btn me-ai__btn--enhance"
-                title="AI Enhance: find the brightest thing left on this page and fix it (community styles first, verified by a screenshot)"
-                onclick={() => props.actions.enhanceSite()}
+                class={{'me-ai__btn': true, 'me-ai__btn--enhance': true, 'me-ai__btn--busy': Boolean(store.busy)}}
+                title={`Find the brightest thing left on this page and fix it: community styles first, checked with a screenshot${hint}`}
+                onclick={enhance}
             >
-                <span class="me-ai__icon"><KitIcon name="ai-enhance" /></span>AI Enhance
+                <span class="me-ai__icon"><KitIcon name="ai-enhance" /></span>{store.busy ? 'Enhancing…' : 'AI Enhance'}
             </button>
             <button class="me-ai__btn me-ai__btn--clean" aria-disabled="true" title="Clean Up: coming soon (on-device)">
                 <span class="me-ai__icon"><KitIcon name="clean-up" /></span>Clean Up

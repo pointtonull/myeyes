@@ -323,7 +323,13 @@ export class Extension {
             }
         };
         if (!info.url || !isURLEnabled(info.url, UserStorage.settings, info)) {
-            osd(tab.id, {title: 'AI Enhance', note: 'MyEyes is not darkening this page', icon: 'disabled'});
+            // fixes ride on the dynamic theme, so it has to be running here; say how to get there
+            const host = info.url ? getURLHostOrProtocol(info.url) : undefined;
+            const mode = info.url ? getSiteEnableMode(UserStorage.settings, info.url) : 'disabled';
+            const note = !UserStorage.settings.enabled ? 'MyEyes is off: turn it on first'
+                : mode === 'disabled' ? 'MyEyes is off for this site: set it to Auto or Enabled'
+                    : 'This page is already dark: set it to Enabled to fix what is left';
+            osd(tab.id, {title: 'AI Enhance', host, note, icon: 'disabled'});
             return;
         }
         await GlareFixer.enhance(tab, info.url, {
