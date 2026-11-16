@@ -69,7 +69,9 @@ const $colors: { [key: string]: string } = {
     toolbar_field_text: 'black',
 };
 
-export function setWindowTheme(theme: Theme): void {
+export function setWindowTheme($theme: Theme): void {
+    // MyEyes!: State colours encode page states; the browser's own toolbar has none
+    const theme = {...$theme, stateColours: 0};
     const colors = Object.entries($colors).reduce((obj: { [key: string]: string }, [key, value]) => {
         const type: 'bg' | 'text' | 'border' = themeColorTypes[key];
         const modify: ((rgb: RGBA, theme: Theme, shouldRegister: boolean) => string) = {

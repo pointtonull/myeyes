@@ -20,7 +20,9 @@ import type {RGBA} from './color';
  *    distinguishable at the same low brightness, nothing gets brighter;
  * 5. the original hue is reused when there is one (Gmail's blue); pure greys
  *    get a fixed hue, opposite for text and backgrounds.
- * Text is tinted much less (it is already distinguishable); colours that keep
+ * Only backgrounds that were light and text that was dark are tinted (those are
+ * the states the mapping loses): dark areas, shadows and light text keep their
+ * look. Text is tinted much less (it is already distinguishable); colours that keep
  * their own colour after the mapping are left alone; results stay in gamut.
  */
 
@@ -39,6 +41,12 @@ const TEXT_FACTOR = 0.25;
 const MIN_OWN_CHROMA = 0.004;
 /** Hue for pure greys: violet-blue for backgrounds, the opposite for text. */
 const NEUTRAL_HUE: Record<StateKind, number> = {background: 265, text: 85};
+/** Backgrounds are tinted only if they were light: none below this OKLab L, full above the next. */
+const LIGHT_BG_FROM = 0.55;
+const LIGHT_BG_TO = 0.75;
+/** Text is tinted only if it was dark: full below this OKLab L, none above the next. */
+const DARK_TEXT_FROM = 0.35;
+const DARK_TEXT_TO = 0.55;
 
 function toLinear(c: number): number {
     const v = c / 255;
@@ -86,22 +94,44 @@ export function deltaE(x: Pick<RGBA, 'r' | 'g' | 'b'>, y: Pick<RGBA, 'r' | 'g' |
     return 100 * Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 }
 
-/** How much tint (OKLab chroma) a colour gets: grows as √distance from the reference, capped. */
-export function tintChroma(original: Pick<RGBA, 'r' | 'g' | 'b'>, kind: StateKind, strength: number): number {
-    const [L0] = rgbToOklab(original);
+function smoothstep(from: number, to: number, x: number): number {
+    const t = Math.min(1, Math.max(0, (x - from) / (to - from)));
+    return t * t * (3 - 2 * t);
+}
+
+/**
+ * Only states the mapping actually loses: backgrounds that were LIGHT (the
+ * dark scheme squeezes those together) and text that was DARK. A dark original
+ * (a black video player, a #333 header, a shadow) or light text keeps its own
+ * look: tinting those encodes nothing and would turn whole areas purple.
+ */
+function relevance(L0: number, kind: StateKind): number {
+    return kind === 'background' ? smoothstep(LIGHT_BG_FROM, LIGHT_BG_TO, L0) : 1 - smoothstep(DARK_TEXT_FROM, DARK_TEXT_TO, L0);
+}
+
+function chromaFor(L0: number, kind: StateKind, strength: number): number {
     const distance = Math.max(0, kind === 'background' ? 1 - L0 : L0);
     const max = MAX_CHROMA * (Math.min(100, Math.max(0, strength)) / 100) * (kind === 'text' ? TEXT_FACTOR : 1);
-    return max * Math.min(1, Math.sqrt(distance / KNEE));
+    return max * Math.min(1, Math.sqrt(distance / KNEE)) * relevance(L0, kind);
+}
+
+/** How much tint (OKLab chroma) a colour gets: √distance from white (bg) / black (text), capped, light bg / dark text only. */
+export function tintChroma(original: Pick<RGBA, 'r' | 'g' | 'b'>, kind: StateKind, strength: number): number {
+    return chromaFor(rgbToOklab(original)[0], kind, strength);
 }
 
 /**
  * The tinted version of `mapped` (Dark Reader's dark colour for `original`):
  * same OKLab lightness, chroma from tintChroma, the original's own hue or the
  * kind's neutral hue. Unchanged when the strength is 0, the original is plain
- * white/black, or the mapped colour already carries more colour than the tint.
+ * white/black or outside the relevant range, or the mapped colour already
+ * carries more colour than the tint. Channels are whole numbers: the engine
+ * formats colours as hex, and a fractional channel ("#14.1194…") is an
+ * invalid colour, which the browser drops (the background vanishes).
  */
 export function stateTint(original: RGBA, mapped: RGBA, kind: StateKind, strength: number): RGBA {
-    const chroma = tintChroma(original, kind, strength);
+    const [L0, a0, b0] = rgbToOklab(original);
+    const chroma = chromaFor(L0, kind, strength);
     if (chroma < 1e-4) {
         return mapped;
     }
@@ -109,25 +139,25 @@ export function stateTint(original: RGBA, mapped: RGBA, kind: StateKind, strengt
     if (Math.hypot(am, bm) >= chroma) {
         return mapped;
     }
-    const [, a0, b0] = rgbToOklab(original);
     const hue = Math.hypot(a0, b0) > MIN_OWN_CHROMA ? Math.atan2(b0, a0) : NEUTRAL_HUE[kind] * Math.PI / 180;
-    // largest chroma ≤ the tint that the screen can show at this lightness
-    let lo = 0;
-    let hi = chroma;
-    let best = oklabToRgb(L, 0, 0);
-    for (let i = 0; i < 14; i++) {
-        const c = (lo + hi) / 2;
-        const rgb = oklabToRgb(L, c * Math.cos(hue), c * Math.sin(hue));
-        if (inGamut(rgb)) {
-            lo = c;
-            best = rgb;
-        } else {
-            hi = c;
+    const at = (c: number) => oklabToRgb(L, c * Math.cos(hue), c * Math.sin(hue));
+    let rgb = at(chroma);
+    if (!inGamut(rgb)) {
+        // the largest chroma the screen can show at this lightness
+        let lo = 0;
+        let hi = chroma;
+        rgb = at(0);
+        for (let i = 0; i < 14; i++) {
+            const c = (lo + hi) / 2;
+            const candidate = at(c);
+            if (inGamut(candidate)) {
+                lo = c;
+                rgb = candidate;
+            } else {
+                hi = c;
+            }
         }
     }
-    const full = oklabToRgb(L, chroma * Math.cos(hue), chroma * Math.sin(hue));
-    // whole channel values: the engine formats colours as hex, and a fractional channel
-    // ("#14.1194…") is an invalid colour, which the browser drops (the background vanishes)
-    const [r, g, b] = (inGamut(full) ? full : best).map((v) => Math.round(Math.min(255, Math.max(0, v))));
+    const [r, g, b] = rgb.map((v) => Math.round(Math.min(255, Math.max(0, v))));
     return {r, g, b, a: mapped.a};
 }

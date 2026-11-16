@@ -76,23 +76,23 @@ function modifyColorWithCache(rgb: RGBA, theme: Theme, modifyHSL: HSLModifyFunct
     const pole = poleColor == null ? null : parseToHSLWithCache(poleColor);
     const anotherPole = anotherPoleColor == null ? null : parseToHSLWithCache(anotherPoleColor);
     const modified = modifyHSL(hsl, pole!, anotherPole!);
-    const {r, g, b, a} = hslToRGB(modified);
+    const mapped = hslToRGB(modified);
+    const a = mapped.a;
+    let {r, g, b} = mapped;
+    // MyEyes!: give light-page states (read/unread, hover, selected) back as a tint, at the
+    // same lightness (utils/state-colours). `state` is only passed on the dark-scheme
+    // background/text paths. Tinted BEFORE the brightness/contrast/sepia/grayscale
+    // matrix, so those settings shape the tint too (grayscale 100 removes it).
+    const strength = theme.stateColours ?? DEFAULT_STATE_COLOURS;
+    if (state && strength > 0) {
+        ({r, g, b} = stateTint(rgb, {r, g, b, a}, state, strength));
+    }
     const matrix = createFilterMatrix({...theme, mode: 0});
     const [rf, gf, bf] = applyColorMatrix([r, g, b], matrix);
 
-    // MyEyes!: give light-page states (read/unread, hover, selected) back as a tint, at the
-    // same lightness (utils/state-colours); dark schemes only, cached like the rest
-    let out: RGBA = {r: rf, g: gf, b: bf, a};
-    const strength = theme.stateColours ?? DEFAULT_STATE_COLOURS;
-    if (state && theme.mode === 1 && strength > 0) {
-        const tinted = stateTint(rgb, out, state, strength);
-        // whole numbers only: rgbToHexString would emit an invalid colour for fractions
-        out = {r: Math.round(tinted.r), g: Math.round(tinted.g), b: Math.round(tinted.b), a: tinted.a};
-    }
-
-    const color = (out.a === 1 ?
-        rgbToHexString({r: out.r, g: out.g, b: out.b}) :
-        rgbToString(out));
+    const color = (a === 1 ?
+        rgbToHexString({r: rf, g: gf, b: bf}) :
+        rgbToString({r: rf, g: gf, b: bf, a}));
 
     fnCache.set(id, color);
     return color;

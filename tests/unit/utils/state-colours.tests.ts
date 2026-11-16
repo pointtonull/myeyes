@@ -47,14 +47,28 @@ describe('state colours: states stay distinguishable without adding light', () =
         const near = tintChroma(READ, 'background', 50);
         const far = tintChroma(SELECTED, 'background', 50);
         expect(near).toBeGreaterThan(0.025); // a few percent already shows
-        expect(far).toBeCloseTo(0.06, 5); // the cap at the default strength
-        expect(tintChroma(hex('#333333'), 'background', 50)).toBeCloseTo(0.06, 5);
+        expect(far).toBeCloseTo(0.06, 5); // the cap at strength 50
         expect(tintChroma(READ, 'background', 100)).toBeCloseTo(2 * near, 5);
+    });
+
+    it('leaves what the mapping does not lose alone: dark backgrounds, shadows, light text', () => {
+        for (const dark of ['#000000', '#111111', '#333333', '#1e3a5f']) {
+            expect(tintChroma(hex(dark), 'background', 100)).toBe(0); // video players, headers, code blocks
+        }
+        const shadow = hex('#000000', 0.3);
+        expect(stateTint(shadow, hex('#000000', 0.3), 'background', 100)).toEqual(hex('#000000', 0.3));
+        for (const light of ['#ffffff', '#e8eaed', '#bdc1c6']) {
+            expect(tintChroma(hex(light), 'text', 100)).toBe(0); // white labels, light secondary text
+        }
+        // mid greys fade in rather than switching on
+        const mid = tintChroma(hex('#999999'), 'background', 100);
+        expect(mid).toBeGreaterThan(0);
+        expect(mid).toBeLessThan(tintChroma(hex('#cccccc'), 'background', 100));
     });
 
     it('tints text much less, from black, with the opposite neutral hue', () => {
         expect(tintChroma(hex('#5f6368'), 'text', 50)).toBeLessThan(0.02);
-        const grey = stateTint(hex('#808080'), hex('#a0a0a0'), 'text', 100);
+        const grey = stateTint(hex('#3c3c3c'), hex('#a0a0a0'), 'text', 100); // dark grey text, shown light
         expect(Math.abs(hueDeg(grey) - 85)).toBeLessThan(10);
     });
 
@@ -69,7 +83,7 @@ describe('state colours: states stay distinguishable without adding light', () =
             expect(out).not.toBe(m);
             expect([out.r, out.g, out.b].every(Number.isInteger)).toBe(true);
         }
-        expect([...Object.values(stateTint(hex('#808080'), hex('#a0a0a0'), 'text', 100))].slice(0, 3).every(Number.isInteger)).toBe(true);
+        expect([...Object.values(stateTint(hex('#3c3c3c'), hex('#a0a0a0'), 'text', 100))].slice(0, 3).every(Number.isInteger)).toBe(true);
     });
 
     it('stays in gamut and keeps alpha', () => {
