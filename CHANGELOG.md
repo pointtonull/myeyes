@@ -1,3 +1,6 @@
+> This is Dark Reader's changelog, kept because MyEyes! is built on that code.
+> MyEyes! releases are described on the [releases page](https://github.com/pointtonull/myeyes/releases).
+
 # 4.9.135 (November 6, 2026)
 
 - Edge iOS: Update user interface.

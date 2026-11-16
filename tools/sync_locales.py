@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """Propagate new message keys from src/_locales/en.config to every locale.
 
-    python3 tools/sync_locales.py [--check]
+    python3 tools/sync_locales.py [--check] [--reset KEY ...]
 
-Dark Reader's locale files must mirror en.config line for line (same keys at
+The locale files must mirror en.config line for line (same keys at
 the same positions, same blank lines — enforced by
 tests/unit/config/locales.tests.ts). After adding a key to en.config, run this:
 each locale is rebuilt in en.config's key order, keeping its own translation
 for every key it has and filling missing keys with the English text (what the
 browser would fall back to anyway). Keys a locale has but en.config doesn't
 are dropped. --check only reports which files would change (exit 1 if any).
+
+--reset KEY (repeatable) replaces that key with the English text in every
+locale, for when the English wording changed meaning and the translations
+describe something else (e.g. the extension description inherited from Dark
+Reader).
 """
 import argparse
 import glob
@@ -35,12 +40,12 @@ def parse(text):
     return header, blocks, order
 
 
-def rebuild(en_text, loc_text):
+def rebuild(en_text, loc_text, reset=()):
     en_header, en_blocks, en_order = parse(en_text)
     _, loc_blocks, _ = parse(loc_text)
     lines = list(en_header)
     for key in en_order:
-        own = loc_blocks.get(key)
+        own = None if key in reset else loc_blocks.get(key)
         # keep the translation only if it has the same shape as English
         lines.extend(own if own is not None and len(own) == len(en_blocks[key]) else en_blocks[key])
     return "\n".join(lines)
@@ -49,17 +54,22 @@ def rebuild(en_text, loc_text):
 def main():
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--check", action="store_true", help="report files that would change, don't write")
+    parser.add_argument("--reset", action="append", default=[], metavar="KEY",
+                        help="use the English text for this key in every locale (repeatable)")
     args = parser.parse_args()
 
     with open(os.path.join(LOCALES, "en.config"), encoding="utf-8") as handle:
         en_text = handle.read()
+    unknown = [key for key in args.reset if key not in parse(en_text)[1]]
+    if unknown:
+        parser.error(f"not a key of en.config: {', '.join(unknown)}")
     changed = []
     for path in sorted(glob.glob(os.path.join(LOCALES, "*.config"))):
         if os.path.basename(path) == "en.config":
             continue
         with open(path, encoding="utf-8") as handle:
             text = handle.read()
-        new = rebuild(en_text, text)
+        new = rebuild(en_text, text, set(args.reset))
         if new != text:
             changed.append(os.path.basename(path))
             if not args.check:
