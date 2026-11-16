@@ -1,44 +1,25 @@
-import {getUILanguage} from './locales';
-import {isEdge, isMobile} from './platform';
+export const REPO_URL = 'https://github.com/pointtonull/myeyes';
 
-export const HOMEPAGE_URL = 'https://darkreader.org';
-export const BLOG_URL = 'https://darkreader.org/blog/';
-export const NEWS_URL = 'https://darkreader.org/blog/posts.json';
-export const DEVTOOLS_DOCS_URL = 'https://github.com/darkreader/darkreader/blob/main/CONTRIBUTING.md';
-export const DONATE_URL = 'https://darkreader.org/support-us/';
-export const GITHUB_URL = 'https://github.com/darkreader/darkreader';
-export const MOBILE_URL = 'https://darkreader.org/tips/mobile/';
-export const PRIVACY_URL = 'https://darkreader.org/privacy/';
-export const TWITTER_URL = 'https://twitter.com/darkreaderapp';
-export const UNINSTALL_URL = 'https://darkreader.org/goodluck/';
-export const HELP_URL = 'https://darkreader.org/help';
+// MyEyes! has no site of its own: every user-facing link lands in the repository.
+export const HOMEPAGE_URL = REPO_URL;
+export const BLOG_URL = `${REPO_URL}/releases/`;
+// Dormant: the inherited news feed is off by default (`fetchNews`) and has no UI toggle.
+// It points at a file that does not exist, so it can never reach another site.
+export const NEWS_URL = `${REPO_URL}/raw/main/docs/news.json`;
+export const DEVTOOLS_DOCS_URL = `${REPO_URL}/blob/main/CONTRIBUTE.md`;
+export const DONATE_URL = REPO_URL;
+export const GITHUB_URL = REPO_URL;
+export const MOBILE_URL = REPO_URL;
+export const PRIVACY_URL = `${REPO_URL}/blob/main/PRIVACY.md`;
+export const TWITTER_URL = REPO_URL;
+export const UNINSTALL_URL = `${REPO_URL}/issues/`;
+export const HELP_URL = `${REPO_URL}#readme`;
+
+// Dark Reader's per-site fixes: the one deliberate dependency on upstream (see FORK.md).
 export const CONFIG_URL_BASE = 'https://raw.githubusercontent.com/darkreader/darkreader/main/src/config';
 
-const helpLocales = [
-    'be',
-    'cs',
-    'de',
-    'en',
-    'es',
-    'fr',
-    'it',
-    'ja',
-    'nl',
-    'pt',
-    'ru',
-    'sr',
-    'tr',
-    'zh-CN',
-    'zh-TW',
-];
-
 export function getHelpURL(): string {
-    if (isEdge && isMobile) {
-        return `${HELP_URL}/mobile/`;
-    }
-    const locale = getUILanguage();
-    const matchLocale = helpLocales.find((hl) => hl === locale) || helpLocales.find((hl) => locale.startsWith(hl)) || 'en';
-    return `${HELP_URL}/${matchLocale}/`;
+    return HELP_URL;
 }
 
 export function getBlogPostURL(postId: string): string {
