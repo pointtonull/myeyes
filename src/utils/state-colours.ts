@@ -18,18 +18,33 @@ import type {RGBA} from './color';
  *    percent, a straight multiplier would either miss them or repaint the page;
  * 4. Dark Reader's perceptual lightness is kept exactly (OKLab L): states get
  *    distinguishable at the same low brightness, nothing gets brighter;
- * 5. the original hue is reused when there is one (Gmail's blue); pure greys
- *    get a fixed hue, opposite for text and backgrounds.
+ * 5. the hue is the value, turned into a hue scale: how far the original was
+ *    from white (or black) picks a hue between the setting's `from` and `to`
+ *    (OKLab L is perceptually even, so the scale is too). The more saturated
+ *    the original, the less it moves: a grey follows the scale fully, an
+ *    intense colour keeps its own hue, and in between the two blend (round the
+ *    short way of the hue wheel). Text uses the same range turned 180°.
  * Only backgrounds that were light and text that was dark are tinted (those are
  * the states the mapping loses): dark areas, shadows and light text keep their
  * look. Text is tinted much less (it is already distinguishable); colours that keep
  * their own colour after the mapping are left alone; results stay in gamut.
+ *
+ * Three theme settings: `stateColours`, the strength (0..100, no control of its
+ * own; 0 switches the tint off), and `stateHueFrom` / `stateHueTo`, the two
+ * ends of the hue scale (State colors slider): degrees on the hue wheel,
+ * -180..180 relative to the violet-blue that backgrounds use for pure greys
+ * (text is turned 180° from that). The ends may be in either order.
  */
 
 export type StateKind = 'background' | 'text';
 
 /** Theme default (0..100). 0 = Dark Reader's own mapping, unchanged. */
 export const DEFAULT_STATE_COLOURS = 72; // Carlos, on Gmail: 50 "enoughish", 72 preferred
+
+/** Hue scale ends, degrees relative to the neutral hue (-180..180): the state closest to white sits at `from`. */
+export const DEFAULT_STATE_HUE_FROM = 0;
+export const DEFAULT_STATE_HUE_TO = 90;
+export const MAX_STATE_HUE = 180;
 
 /** Chroma (OKLab) of the tint at strength 100; 50 gives 0.06, the default 72 about 0.086. */
 const MAX_CHROMA = 0.12;
@@ -39,14 +54,28 @@ const KNEE = 0.08;
 const TEXT_FACTOR = 0.25;
 /** Below this the original has no hue worth keeping. */
 const MIN_OWN_CHROMA = 0.004;
-/** Hue for pure greys: violet-blue for backgrounds, the opposite for text. */
-const NEUTRAL_HUE: Record<StateKind, number> = {background: 265, text: 85};
+/** Hue (OKLab, degrees) at the middle of the scale: violet-blue for backgrounds, the opposite for text. */
+export const NEUTRAL_HUE: Record<StateKind, number> = {background: 265, text: 85};
 /** Backgrounds are tinted only if they were light: none below this OKLab L, full above the next. */
 const LIGHT_BG_FROM = 0.55;
 const LIGHT_BG_TO = 0.75;
 /** Text is tinted only if it was dark: full below this OKLab L, none above the next. */
 const DARK_TEXT_FROM = 0.35;
 const DARK_TEXT_TO = 0.55;
+/**
+ * Distance from the reference (OKLab L) at which the hue scale reaches `to`.
+ * Light-page states live close to white: Gmail's read/hover/selected rows and
+ * Material greys sit within 0.12 of it (L 0.88-1.0), so the scale ends at 0.15
+ * (L 0.85) and both ends matter on ordinary pages; anything greyer is "to".
+ * Text states sit well away from black, so its scale is longer.
+ */
+const HUE_SPAN: Record<StateKind, number> = {background: 0.15, text: DARK_TEXT_FROM};
+/**
+ * OKLab saturation (chroma / lightness) from which a colour keeps its own hue
+ * completely. Measured: greys 0, Gmail's light-blue selected row 0.06, pale
+ * pink/yellow banners 0.02-0.03, intense blues/reds/greens 0.25-0.36.
+ */
+const FULL_SATURATION = 0.1;
 
 function toLinear(c: number): number {
     const v = c / 255;
@@ -120,18 +149,59 @@ export function tintChroma(original: Pick<RGBA, 'r' | 'g' | 'b'>, kind: StateKin
     return chromaFor(rgbToOklab(original)[0], kind, strength);
 }
 
+/** Degrees → 0..360. */
+function wrapHue(degrees: number): number {
+    return ((degrees % 360) + 360) % 360;
+}
+
+/** Hue (degrees) `weight` of the way from `a` to `b`, the short way round the wheel. */
+function blendHue(a: number, b: number, weight: number): number {
+    const diff = ((b - a + 540) % 360 + 360) % 360 - 180;
+    return wrapHue(a + weight * diff);
+}
+
+/**
+ * The hue (OKLab, degrees 0..360) a state's tint gets: its value (distance
+ * from white for backgrounds, from black for text) picks a point on the scale
+ * from `hueFrom` to `hueTo` (relative to the kind's neutral hue, see header),
+ * and the more saturated the original, the more it keeps its own hue instead.
+ */
+export function stateHue(
+    original: Pick<RGBA, 'r' | 'g' | 'b'>,
+    kind: StateKind,
+    hueFrom = DEFAULT_STATE_HUE_FROM,
+    hueTo = DEFAULT_STATE_HUE_TO,
+): number {
+    const [L0, a0, b0] = rgbToOklab(original);
+    const distance = Math.max(0, kind === 'background' ? 1 - L0 : L0);
+    const t = Math.min(1, distance / HUE_SPAN[kind]);
+    const scaleHue = wrapHue(NEUTRAL_HUE[kind] + hueFrom + t * (hueTo - hueFrom));
+    const chroma = Math.hypot(a0, b0);
+    if (chroma <= MIN_OWN_CHROMA) {
+        return scaleHue;
+    }
+    const saturation = Math.min(1, chroma / Math.max(L0, 0.05) / FULL_SATURATION);
+    return blendHue(wrapHue(Math.atan2(b0, a0) * 180 / Math.PI), scaleHue, 1 - saturation);
+}
+
 /**
  * The tinted version of `mapped` (Dark Reader's dark colour for `original`):
- * same OKLab lightness, chroma from tintChroma, the original's own hue or the
- * kind's neutral hue. Unchanged when the strength is 0, the original is plain
- * white/black or outside the relevant range, or the mapped colour already
- * carries more colour than the tint. Channels are whole numbers: the engine
- * formats colours as hex, and a fractional channel ("#14.1194…") is an
- * invalid colour, which the browser drops (the background vanishes).
+ * same OKLab lightness, chroma from tintChroma, hue from stateHue. Unchanged
+ * when the strength is 0, the original is plain white/black or outside the
+ * relevant range, or the mapped colour already carries more colour than the
+ * tint. Channels are whole numbers: the engine formats colours as hex, and a
+ * fractional channel ("#14.1194…") is an invalid colour, which the browser
+ * drops (the background vanishes).
  */
-export function stateTint(original: RGBA, mapped: RGBA, kind: StateKind, strength: number): RGBA {
-    const [L0, a0, b0] = rgbToOklab(original);
-    const chroma = chromaFor(L0, kind, strength);
+export function stateTint(
+    original: RGBA,
+    mapped: RGBA,
+    kind: StateKind,
+    strength: number,
+    hueFrom = DEFAULT_STATE_HUE_FROM,
+    hueTo = DEFAULT_STATE_HUE_TO,
+): RGBA {
+    const chroma = chromaFor(rgbToOklab(original)[0], kind, strength);
     if (chroma < 1e-4) {
         return mapped;
     }
@@ -139,7 +209,7 @@ export function stateTint(original: RGBA, mapped: RGBA, kind: StateKind, strengt
     if (Math.hypot(am, bm) >= chroma) {
         return mapped;
     }
-    const hue = Math.hypot(a0, b0) > MIN_OWN_CHROMA ? Math.atan2(b0, a0) : NEUTRAL_HUE[kind] * Math.PI / 180;
+    const hue = stateHue(original, kind, hueFrom, hueTo) * Math.PI / 180;
     const at = (c: number) => oklabToRgb(L, c * Math.cos(hue), c * Math.sin(hue));
     let rgb = at(chroma);
     if (!inGamut(rgb)) {

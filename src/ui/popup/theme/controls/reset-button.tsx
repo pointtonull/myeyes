@@ -3,10 +3,13 @@ import {m} from 'malevic';
 import {DEFAULT_SETTINGS} from '../../../../defaults';
 import type {ViewProps} from '../../../../definitions';
 import {Glyph} from '../glyph';
+import {changeSiteTheme} from '../utils';
 
 export default function ResetButtonGroup(props: ViewProps) {
     function reset() {
-        props.actions.setTheme(DEFAULT_SETTINGS.theme);
+        // The page always edits the current website, so Reset does too (not the shared default theme).
+        // It does not touch the scheme automation, as before: only the theme values go back.
+        changeSiteTheme(props, DEFAULT_SETTINGS.theme);
     }
 
     return (
@@ -16,7 +19,7 @@ export default function ResetButtonGroup(props: ViewProps) {
                 <span>Reset to defaults</span>
             </button>
             <span class="adv-reset__hint">
-                Restore current theme values to defaults
+                Restore this website's values to defaults
             </span>
         </div>
     );

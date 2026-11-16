@@ -26,8 +26,6 @@ import {
     TextStroke,
     UseFont,
 } from '../controls';
-import {Glyph} from '../glyph';
-import ThemePresetPicker from '../preset-picker';
 import {getCurrentThemePreset} from '../utils';
 
 import Collapsible from './collapsible-panel';
@@ -40,6 +38,14 @@ interface ThemeGroupProps {
 function MainGroup({theme, change}: ThemeGroupProps) {
     return (
         <Array>
+            <Mode
+                mode={theme.engine}
+                onChange={(mode) => change({engine: mode})}
+            />
+            <Scheme
+                isDark={theme.mode === 1}
+                onChange={(isDark) => change({mode: isDark ? 1 : 0})}
+            />
             <Brightness
                 value={theme.brightness}
                 onChange={(v) => change({brightness: v})}
@@ -59,18 +65,11 @@ function MainGroup({theme, change}: ThemeGroupProps) {
             {theme.engine === ThemeEngine.dynamicTheme && theme.mode === 1 ? (
                 // MyEyes!: only the Dynamic engine in dark mode uses it (utils/state-colours)
                 <StateColours
-                    value={theme.stateColours}
-                    onChange={(v) => change({stateColours: v})}
+                    from={theme.stateHueFrom}
+                    to={theme.stateHueTo}
+                    onChange={({from, to}) => change({stateHueFrom: from, stateHueTo: to})}
                 />
             ) : null}
-            <Scheme
-                isDark={theme.mode === 1}
-                onChange={(isDark) => change({mode: isDark ? 1 : 0})}
-            />
-            <Mode
-                mode={theme.engine}
-                onChange={(mode) => change({engine: mode})}
-            />
         </Array>
     );
 }
@@ -207,14 +206,10 @@ export default function ThemePage(props: ViewProps) {
                     <img class="adv-hero__mascot" src="../assets/images/myeyes-lab-mascot.png" alt="" draggable="false" />
                     <p class="adv-hero__tagline">Fine-tune how pages look and feel.</p>
                 </div>
-                <div class="adv-theme">
-                    <Glyph name="layers" class="adv-theme__icon" />
-                    <ThemePresetPicker {...props} />
-                </div>
                 <Collapsible>
                     <Collapsible.Group
                         id="main"
-                        label="Adjustments"
+                        label="Style"
                         hint="Brightness, contrast, color tone"
                         icon="adjustments"
                     >

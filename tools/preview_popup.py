@@ -14,6 +14,11 @@ HTTP so the popup renders as a plain page, and let FoxMCP shoot it full-res.
     python3 tools/preview_popup.py --scenario named --click .me-default__value --name default_menu
     python3 tools/preview_popup.py --scenario named --click .me-card--theme \
         --click "text=New theme" --name save_as   # "text=…" clicks the button containing …
+    # keyboard and pointer steps, for controls that are not buttons; edits to
+    # settings are applied and shown (the mock plays the background's part)
+    python3 tools/preview_popup.py --scenario named --click .me-card--theme \
+        --click "text=More theme options" --click "key:.hue-range__handle--to|End" \
+        --click "drag:.hue-range__handle--from|-60" --name hue_range
 
 Needs: a debug build (build/debug/firefox), the running FoxMCP Firefox, Pillow
 (run with ~/.virtualenvs/p3/bin/python), and ~/bin/foxmcp.screenshot.
@@ -175,6 +180,25 @@ window.addEventListener('load', function() {{
         target.dispatchEvent(new KeyboardEvent('keydown', {{key: parts[1], bubbles: true, cancelable: true}}));
         return;
       }}
+      // "drag:SELECTOR|DX" presses the pointer on SELECTOR's centre, moves it DX px
+      // sideways (negative = left) and releases it, e.g. "drag:.hue-range__handle--to|-60"
+      if (sel.indexOf('drag:') === 0) {{
+        var dragParts = sel.slice(5).split('|');
+        var dragEl = document.querySelector(dragParts[0]);
+        if (!dragEl) {{ meShowErr('harness: nothing matches ' + dragParts[0]); return; }}
+        var box = dragEl.getBoundingClientRect();
+        var startX = box.left + box.width / 2, midY = box.top + box.height / 2;
+        var dragDx = parseFloat(dragParts[1]);
+        var fire = function(target, type, x) {{
+          target.dispatchEvent(new PointerEvent(type, {{clientX: x, clientY: midY, button: 0,
+            pointerType: 'mouse', bubbles: true, cancelable: true}}));
+        }};
+        fire(dragEl, 'pointerdown', startX);
+        fire(window, 'pointermove', startX + dragDx / 2);
+        fire(window, 'pointermove', startX + dragDx);
+        fire(window, 'pointerup', startX + dragDx);
+        return;
+      }}
       var el = meClickTarget(sel);
       if (el) {{ el.click(); }} else {{ meShowErr('harness: nothing matches ' + sel); }}
     }}, 1200 + i * 400);
@@ -197,11 +221,30 @@ window.addEventListener('load', function() {{
       onDisconnect: {{addListener: function() {{}}}},
       postMessage: function() {{}}, disconnect: function() {{}}}};
   }}
+  // Setting edits are applied to DATA and pushed back to the popup (as the
+  // background does), so a key: or click step that edits a setting shows.
+  var changeListeners = [];
+  function applyMessage(msg) {{
+    if (!msg || !DATA.settings) {{ return; }}
+    if (msg.type === 'ui-bg-change-settings') {{
+      Object.keys(msg.data || {{}}).forEach(function(k) {{ DATA.settings[k] = msg.data[k]; }});
+    }} else if (msg.type === 'ui-bg-set-theme') {{
+      DATA.settings.theme = Object.assign({{}}, DATA.settings.theme, msg.data);
+    }} else {{
+      return;
+    }}
+    setTimeout(function() {{
+      changeListeners.forEach(function(f) {{ f({{type: 'bg-ui-changes', data: DATA}}); }});
+    }}, 0);
+  }}
   var mock = {{
     runtime: {{
       connect: function(o) {{ return port(o && o.name); }},
-      sendMessage: function() {{}},
-      onMessage: {{addListener: function() {{}}, removeListener: function() {{}}}},
+      sendMessage: function(msg) {{ applyMessage(msg); }},
+      onMessage: {{
+        addListener: function(f) {{ changeListeners.push(f); }},
+        removeListener: function(f) {{ changeListeners = changeListeners.filter(function(x) {{ return x !== f; }}); }}
+      }},
       getURL: function(p) {{ return p; }}
     }},
     storage: {{local: {{get: function(o, cb) {{ cb && cb({{}}); }}}}}},

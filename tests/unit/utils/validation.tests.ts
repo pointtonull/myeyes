@@ -43,6 +43,8 @@ test('Settings Validation', () => {
         darkColorScheme: false,
         immediateModify: 1,
         stateColours: 150,
+        stateHueFrom: 200,
+        stateHueTo: -181,
     };
     themeValidation = validateTheme(wonkyTheme as any);
     expect(themeValidation.errors.length).toBeGreaterThan(0);
@@ -79,6 +81,8 @@ test('Settings Validation', () => {
             darkColorScheme: false,
             immediateModify: 1,
             stateColours: -1,
+            stateHueFrom: 'blue',
+            stateHueTo: null,
         },
         presets: [
             {id: '', name: 'P1', urls: ['a.com'], theme: {brightness: 100}},
@@ -189,6 +193,8 @@ test('Settings Validation', () => {
             darkColorScheme: 'Darkness',
             immediateModify: true,
             stateColours: 30,
+            stateHueFrom: -150,
+            stateHueTo: 180,
         },
         presets: [
             {id: 'p5', name: 'P5', urls: ['a.com'], theme: {brightness: 100} as Theme},

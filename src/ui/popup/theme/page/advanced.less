@@ -21,6 +21,7 @@
 @adv-control-height: 1.75rem;
 @adv-label-width: 6.3rem;
 @adv-pill-width: 3.2rem;
+@adv-dim: rgba(16, 12, 40, 0.68);  // the part of the hue scale outside the range
 
 .theme-page {
     // the cards' ::after glow paints into this layer, behind the controls
@@ -66,24 +67,6 @@
             line-height: 1.3;
             margin: 0;
             padding-left: 0.7rem;
-        }
-    }
-
-    // "Theme for all websites": the preset dropdown with the layers icon inside
-    .adv-theme {
-        position: relative;
-
-        &__icon {
-            color: #e1dbff;
-            left: 0.65rem;
-            pointer-events: none;
-            position: absolute;
-            top: 0.3rem;
-            z-index: 3;
-        }
-
-        .dropdown__selected {
-            padding-left: 2.1rem;
         }
     }
 
@@ -214,6 +197,103 @@
             right: 0;
             top: 0;
             width: @adv-pill-width;
+        }
+    }
+
+    // ----- State colors: a hue scale with two ends (controls/hue-range). The
+    // track is the hue wheel itself (calm OKLCH), the span between the ends is
+    // lit and the rest dimmed; "from" is a solid knob, "to" a ring. -----
+    // A stacked row: the label and the readout on the first line, the full-width rail under them.
+    .theme-control--stacked {
+        flex-wrap: wrap;
+        row-gap: 0.1rem;
+
+        .theme-control__label {
+            flex: 1 1 auto;
+            width: auto;
+        }
+
+        > .hue-range__value {
+            flex: 0 0 auto;
+        }
+
+        // room at both ends for the handles, which overhang the track by half their width
+        > .hue-range__rail {
+            flex: 0 0 calc(100% - 1.1rem);
+            margin: 0 0.55rem;
+        }
+    }
+
+    .hue-range {
+        &__rail {
+            height: @adv-control-height;
+            position: relative;
+            touch-action: none;
+        }
+
+        &__track,
+        &__dim {
+            border-radius: 99px;
+            height: 0.5rem;
+            position: absolute;
+            top: (@adv-control-height - 0.5rem) / 2;
+        }
+
+        &__track {
+            left: 0;
+            width: 100%;
+        }
+
+        &__dim {
+            background: @adv-dim;
+        }
+
+        &__handle {
+            border: 2px solid #fff;
+            border-radius: 50%;
+            box-sizing: border-box;
+            cursor: pointer;
+            height: 1.1rem;
+            margin-left: -0.55rem;
+            position: absolute;
+            top: (@adv-control-height - 1.1rem) / 2;
+            width: 1.1rem;
+
+            &--from {
+                background: @adv-thumb;
+            }
+
+            &--to {
+                background: #2a2160;
+            }
+
+            &:focus {
+                outline: none;
+            }
+
+            &:focus-visible {
+                outline: 2px solid @adv-focus;
+                outline-offset: 2px;
+            }
+
+            &--active {
+                box-shadow: 0 0 0 0.2rem rgba(139, 108, 255, 0.35);
+            }
+        }
+
+        &__value {
+            align-items: center;
+            background: @adv-pill-bg;
+            border: 1px solid @adv-ring;
+            border-radius: 0.5rem;
+            box-sizing: border-box;
+            color: @adv-text;
+            display: inline-flex;
+            font-size: 0.8rem;
+            height: 1.5rem;
+            justify-content: center;
+            padding: 0 0.7rem;
+            white-space: nowrap;
         }
     }
 

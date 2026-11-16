@@ -74,8 +74,12 @@ export interface Theme {
     lightColorScheme: string;
     darkColorScheme: string;
     immediateModify: boolean;
-    /** MyEyes!: 0..100, tint that keeps light-page states (read/unread, hover, selected) distinguishable (utils/state-colours). */
+    /** MyEyes!: 0..100 strength of the tint that keeps light-page states (read/unread, hover, selected) distinguishable (utils/state-colours); 0 = off. No control of its own. */
     stateColours: number;
+    /** MyEyes!: -180..180 degrees, where the state hue scale starts (the state closest to white), relative to violet-blue (utils/state-colours). */
+    stateHueFrom: number;
+    /** MyEyes!: -180..180 degrees, where the state hue scale ends. */
+    stateHueTo: number;
 }
 
 export interface SiteFix {
