@@ -107,6 +107,8 @@ export interface UserSettings {
     customThemes: CustomSiteConfig[];
     /** MyEyes!: a site's Custom tweaks parked while another engine/theme is active (see utils/named-themes). */
     siteTweaks: CustomSiteConfig[];
+    /** MyEyes!: invert bright diagrams / dim bright photos under the dark theme (inject/image-triage). */
+    tameImages: boolean;
     /** MyEyes!: theme for sites without one of their own — 'default' (built-in) or a preset id. */
     defaultThemeId: string;
     enabledByDefault: boolean;

@@ -155,6 +155,8 @@ export function validateSettings(settings: Partial<UserSettings>): SettingValida
         return tweakValidator.errors.length === 0;
     });
 
+    validateProperty(settings, 'tameImages', isBoolean, DEFAULT_SETTINGS);
+
     validateProperty(settings, 'enabledFor', isArray, DEFAULT_SETTINGS);
     validateArray(settings, 'enabledFor', isNonEmptyString);
     validateProperty(settings, 'disabledFor', isArray, DEFAULT_SETTINGS);

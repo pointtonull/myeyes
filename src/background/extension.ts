@@ -790,6 +790,7 @@ export class Extension {
                             css: createCSSFilterStylesheet(theme, url, isTopFrame, ConfigManager.INVERSION_FIXES_RAW!, ConfigManager.INVERSION_FIXES_INDEX!),
                             detectDarkTheme,
                             detectorHints,
+                            tameImages: settings.tameImages, // MyEyes!: inject/image-triage
                             theme,
                         },
                     };
@@ -802,6 +803,7 @@ export class Extension {
                                 css: createSVGFilterStylesheet(theme, url, isTopFrame, ConfigManager.INVERSION_FIXES_RAW!, ConfigManager.INVERSION_FIXES_INDEX!),
                                 detectDarkTheme,
                                 detectorHints,
+                                tameImages: settings.tameImages, // MyEyes!: inject/image-triage
                                 theme,
                             },
                         };
@@ -814,6 +816,7 @@ export class Extension {
                             svgReverseMatrix: getSVGReverseFilterMatrixValue(),
                             detectDarkTheme,
                             detectorHints,
+                            tameImages: settings.tameImages, // MyEyes!: inject/image-triage
                             theme,
                         },
                     };
@@ -827,6 +830,7 @@ export class Extension {
                                 createStaticStylesheet(theme, url, isTopFrame, ConfigManager.STATIC_THEMES_RAW!, ConfigManager.STATIC_THEMES_INDEX!),
                             detectDarkTheme: settings.detectDarkTheme,
                             detectorHints,
+                            tameImages: settings.tameImages, // MyEyes!: inject/image-triage
                             theme,
                         },
                     };
@@ -841,6 +845,7 @@ export class Extension {
                             isIFrame: !isTopFrame,
                             detectDarkTheme,
                             detectorHints,
+                            tameImages: settings.tameImages, // MyEyes!: inject/image-triage
                         },
                     };
                 }

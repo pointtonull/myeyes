@@ -102,6 +102,7 @@ test('Settings Validation', () => {
             {url: [], theme: DEFAULT_THEME},
             {url: ['a.com']},
         ],
+        tameImages: 'yes',
         disabledFor: ['a.com', '', 'b.com'],
         enabledFor: {0: 'a.com', 1: 'b.com'},
         enabledByDefault: true,
@@ -194,6 +195,7 @@ test('Settings Validation', () => {
         siteTweaks: [
             {url: ['a.com'], baseId: 'p5', theme: {brightness: 90} as Theme},
         ],
+        tameImages: false,
         disabledFor: ['a.com', 'b.com'],
         enabledFor: ['c.com'],
         enabledByDefault: false,

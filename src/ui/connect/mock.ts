@@ -28,6 +28,7 @@ export function getMockData(override = {} as Partial<ExtensionData>): ExtensionD
             customThemes: [],
             defaultThemeId: 'default',
             siteTweaks: [],
+            tameImages: true,
             enabledFor: [],
             disabledFor: [],
             syncSitesFixes: false,
