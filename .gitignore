@@ -53,3 +53,7 @@ __pycache__/
 # Local PR scratch (screenshots + PR text; see CONTRIBUTE.md)
 #-----------------------------------
 pr-assets/
+
+# Signed releases kept next to the source (published as GitHub release assets)
+#-----------------------------------
+/releases/
