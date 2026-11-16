@@ -6,6 +6,11 @@
                     "version": "0.1.0",
                     "update_link": "https://github.com/pointtonull/myeyes/releases/download/v0.1.0/myeyes-0.1.0.xpi",
                     "update_hash": "sha256:f89b3d57223b2d0fce616c28866699ac36acb5fb675049b37c2c312aa92acd90"
+                },
+                {
+                    "version": "0.1.1",
+                    "update_link": "https://github.com/pointtonull/myeyes/releases/download/v0.1.1/myeyes-0.1.1.xpi",
+                    "update_hash": "sha256:cadebc55aafa93f0137282a268cade542f1e1e8ea81d6b54eef820c02d96171c"
                 }
             ]
         }
