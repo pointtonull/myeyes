@@ -14,7 +14,8 @@ export enum MessageTypeUItoBG {
     START_ACTIVATION = 'ui-bg-start-activation',
     RESET_ACTIVATION = 'ui-bg-reset-activation',
     COLOR_SCHEME_CHANGE = 'ui-bg-color-scheme-change',
-    HIDE_HIGHLIGHTS = 'ui-bg-hide-highlights'
+    HIDE_HIGHLIGHTS = 'ui-bg-hide-highlights',
+    ENHANCE_SITE = 'ui-bg-enhance-site' // MyEyes!: AI Enhance button
 }
 
 export enum MessageTypeBGtoUI {
@@ -34,6 +35,7 @@ export enum MessageTypeBGtoCS {
     CLEAN_UP = 'bg-cs-clean-up',
     FETCH_RESPONSE = 'bg-cs-fetch-response',
     SHOW_OSD = 'bg-cs-show-osd', // MyEyes!: on-screen confirmation of a keyboard command
+    OFFENDER_REQUEST = 'bg-cs-offender-request', // MyEyes!: AI Enhance asks the page (inject/offender)
     UNSUPPORTED_SENDER = 'bg-cs-unsupported-sender'
 }
 
@@ -49,7 +51,8 @@ export enum MessageTypeCStoBG {
     DOCUMENT_CONNECT = 'cs-bg-document-connect',
     DOCUMENT_FORGET = 'cs-bg-document-forget',
     DOCUMENT_FREEZE = 'cs-bg-document-freeze',
-    DOCUMENT_RESUME = 'cs-bg-document-resume'
+    DOCUMENT_RESUME = 'cs-bg-document-resume',
+    OFFENDER_RESPONSE = 'cs-bg-offender-response' // MyEyes!: answers OFFENDER_REQUEST
 }
 
 export enum DebugMessageTypeCStoBG {

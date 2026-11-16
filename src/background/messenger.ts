@@ -23,6 +23,7 @@ export interface ExtensionAdapter {
     resetActivation: () => Promise<void>;
     hideHighlights: (ids: string[]) => Promise<void>;
     waitUntilReady: () => Promise<void>;
+    enhanceSite: () => Promise<void>;
 }
 
 export default class Messenger {
@@ -153,6 +154,9 @@ export default class Messenger {
                 break;
             case MessageTypeUItoBG.HIDE_HIGHLIGHTS:
                 Messenger.adapter.hideHighlights(data);
+                break;
+            case MessageTypeUItoBG.ENHANCE_SITE:
+                Messenger.adapter.enhanceSite();
                 break;
             default:
                 break;

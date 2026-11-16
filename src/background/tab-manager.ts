@@ -542,4 +542,14 @@ export default class TabManager {
         TabManager.sendDocumentMessage(tabId, frame.documentId!, message, 0);
         return true;
     }
+
+    /** MyEyes!: send any message to the tab's top-frame content script; false when there is none. */
+    static sendToTopFrame(tabId: number, type: MessageTypeBGtoCS, data: unknown): boolean {
+        const frame = TabManager.tabs[tabId]?.[0];
+        if (!frame) {
+            return false;
+        }
+        TabManager.sendDocumentMessage(tabId, frame.documentId!, {type, data, scriptId: frame.scriptId}, 0);
+        return true;
+    }
 }

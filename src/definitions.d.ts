@@ -33,6 +33,7 @@ export interface ExtensionActions {
     setTheme(theme: Partial<Theme>): void;
     setShortcut(command: string, shortcut: string): Promise<string | null>;
     toggleActiveTab(): void;
+    enhanceSite(): void;
     markNewsAsRead(ids: string[]): void;
     markNewsAsDisplayed(ids: string[]): void;
     loadConfig(options: {local: boolean}): void;

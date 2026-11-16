@@ -52,7 +52,11 @@ export function isStableId(id: string): boolean {
         return false;
     }
     // generated per-page ids like "mwNw", "mwAQ" (MediaWiki Parsoid)
-    return !/^mw[A-Z0-9][A-Za-z0-9]{1,3}$/.test(id);
+    if (/^mw[A-Z0-9][A-Za-z0-9]{1,3}$/.test(id)) {
+        return false;
+    }
+    // a base36-ish chunk: "thing_t3_1xsnvnd" (Reddit post ids)
+    return !id.split(/[-_]/).some((chunk) => chunk.length >= 6 && /\d/.test(chunk) && /[a-z]/i.test(chunk));
 }
 
 /** Shannon entropy per character. */

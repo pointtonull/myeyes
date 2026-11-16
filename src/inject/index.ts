@@ -10,6 +10,7 @@ import {runDarkThemeDetector, stopDarkThemeDetector} from './detector';
 import {createOrUpdateDynamicTheme, removeDynamicTheme, cleanDynamicThemeCache} from './dynamic-theme';
 import {collectCSS} from './dynamic-theme/css-collection';
 import {runImageTriage, stopImageTriage} from './image-triage';
+import {handleOffenderRequest} from './offender';
 import {showOSD} from './osd';
 import {createOrUpdateStyle, removeStyle} from './style';
 import {createOrUpdateSVGFilter, removeSVGFilter} from './svg-filter';
@@ -187,6 +188,17 @@ function onMessage(message: MessageBGtoCS | MessageUItoCS | DebugMessageBGtoCS) 
         case MessageTypeBGtoCS.SHOW_OSD:
             showOSD(message.data);
             break;
+        case MessageTypeBGtoCS.OFFENDER_REQUEST: {
+            const {id, op, args} = message.data;
+            let result: any = null;
+            try {
+                result = handleOffenderRequest(op, args);
+            } catch (err) {
+                logWarn(`AI Enhance request ${op} failed: ${String(err)}`);
+            }
+            sendMessage({type: MessageTypeCStoBG.OFFENDER_RESPONSE, data: {id, result}});
+            break;
+        }
         case MessageTypeBGtoCS.UNSUPPORTED_SENDER:
         case MessageTypeBGtoCS.CLEAN_UP:
             removeStyle();

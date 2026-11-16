@@ -105,6 +105,11 @@ export default class Connector implements ExtensionActions {
         chrome.runtime.sendMessage<MessageUItoBG>({type: MessageTypeUItoBG.TOGGLE_ACTIVE_TAB, data: {}});
     }
 
+    // MyEyes!: AI Enhance (background/glare-fixer)
+    enhanceSite(): void {
+        chrome.runtime.sendMessage<MessageUItoBG>({type: MessageTypeUItoBG.ENHANCE_SITE, data: {}});
+    }
+
     markNewsAsRead(ids: string[]): void {
         chrome.runtime.sendMessage<MessageUItoBG>({type: MessageTypeUItoBG.MARK_NEWS_AS_READ, data: ids});
     }

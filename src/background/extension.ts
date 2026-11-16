@@ -18,10 +18,12 @@ import {nextDefaultTheme, nextSiteTheme, resolveSiteTheme} from '../utils/named-
 import type {OSDMessage} from '../utils/osd-message';
 import {defaultThemeOSD, extensionToggleOSD, pdfToggleOSD, siteEnableOSD, siteThemeOSD} from '../utils/osd-message';
 import {getSiteEnableMode, isSiteDarkened, toggleSiteEnable} from '../utils/site-enable';
+import {siteFixCSS} from '../utils/site-fixes';
 import {isURLInList, getURLHostOrProtocol, isURLEnabled, isPDF} from '../utils/url';
 
 import ConfigManager from './config-manager';
 import DevTools from './devtools';
+import GlareFixer from './glare-fixer';
 import IconManager from './icon-manager';
 import type {ExtensionAdapter} from './messenger';
 import Messenger from './messenger';
@@ -247,6 +249,7 @@ export class Extension {
 
     static async start(): Promise<void> {
         Extension.init();
+        GlareFixer.init();
         await TabManager.cleanState();
         await DevTools.init(Extension.onSettingsChanged);
         await Promise.all([
@@ -302,7 +305,31 @@ export class Extension {
             resetActivation: Extension.resetActivation,
             hideHighlights: UIHighlights.hideHighlights,
             waitUntilReady: Extension.waitUntilReady,
+            enhanceSite: Extension.enhanceActiveTab,
         };
+    }
+
+    /** MyEyes!: AI Enhance — find the brightest thing left on the active tab and fix it (background/glare-fixer). */
+    private static async enhanceActiveTab() {
+        const tab = await getActiveTab();
+        if (!tab?.id) {
+            return;
+        }
+        const info = await Extension.getActiveTabInfo();
+        const osd = (tabId: number, message: OSDMessage) => {
+            if (!TabManager.showOSD(tabId, message)) {
+                IconManager.flashBadge(tabId, '!');
+            }
+        };
+        if (!info.url || !isURLEnabled(info.url, UserStorage.settings, info)) {
+            osd(tab.id, {title: 'AI Enhance', note: 'MyEyes is not darkening this page', icon: 'disabled'});
+            return;
+        }
+        await GlareFixer.enhance(tab, info.url, {
+            settings: () => UserStorage.settings,
+            changeSettings: (patch) => Extension.changeSettings(patch, true),
+            osd,
+        });
     }
 
     private static onCommandInternal = async (command: Command, tabId: number | null, frameId: number | null, frameURL: string | null) => {
@@ -836,7 +863,17 @@ export class Extension {
                     };
                 }
                 case ThemeEngine.dynamicTheme: {
-                    const fixes = getDynamicThemeFixesFor(url, ConfigManager.DYNAMIC_THEME_FIXES_RAW!, ConfigManager.DYNAMIC_THEME_FIXES_INDEX!, UserStorage.settings.enableForPDF);
+                    let fixes = getDynamicThemeFixesFor(url, ConfigManager.DYNAMIC_THEME_FIXES_RAW!, ConfigManager.DYNAMIC_THEME_FIXES_INDEX!, UserStorage.settings.enableForPDF);
+                    // MyEyes!: AI Enhance fixes for this site (top frame: their paths come from it)
+                    const siteCSS = isTopFrame ? siteFixCSS(settings, tabURL) : '';
+                    if (siteCSS) {
+                        fixes = {
+                            url: [getURLHostOrProtocol(tabURL)], invert: [], css: '', ignoreInlineStyle: [], ignoreImageAnalysis: [],
+                            ignoreCSSUrl: [], disableStyleSheetsProxy: false, disableCustomElementRegistryProxy: false,
+                            ...fixes,
+                        };
+                        fixes.css = fixes.css ? `${fixes.css}\n${siteCSS}` : siteCSS;
+                    }
                     return {
                         type: MessageTypeBGtoCS.ADD_DYNAMIC_THEME,
                         data: {
