@@ -74,6 +74,8 @@ export interface Theme {
     lightColorScheme: string;
     darkColorScheme: string;
     immediateModify: boolean;
+    /** MyEyes!: 0..100, tint that keeps light-page states (read/unread, hover, selected) distinguishable (utils/state-colours). */
+    stateColours: number;
 }
 
 export interface SiteFix {

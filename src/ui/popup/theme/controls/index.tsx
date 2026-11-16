@@ -12,6 +12,7 @@ import Scheme from './scheme';
 import Scrollbar from './scrollbar';
 import SelectionColorEditor from './selection';
 import Sepia from './sepia';
+import StateColours from './state-colours';
 import StyleSystemControls from './style-system-controls';
 import TextColor from './text-color';
 import TextStroke from './text-stroke';
@@ -32,6 +33,7 @@ export {
     Scrollbar,
     SelectionColorEditor,
     Sepia,
+    StateColours,
     StyleSystemControls,
     TextColor,
     TextStroke,

@@ -20,6 +20,7 @@ import {
     Scrollbar,
     SelectionColorEditor,
     Sepia,
+    StateColours,
     StyleSystemControls,
     TextColor,
     TextStroke,
@@ -54,6 +55,13 @@ function MainGroup({theme, change}: ThemeGroupProps) {
                 value={theme.grayscale}
                 onChange={(v) => change({grayscale: v})}
             />
+            {theme.engine === ThemeEngine.dynamicTheme && theme.mode === 1 ? (
+                // MyEyes!: only the Dynamic engine in dark mode uses it (utils/state-colours)
+                <StateColours
+                    value={theme.stateColours}
+                    onChange={(v) => change({stateColours: v})}
+                />
+            ) : null}
             <Scheme
                 isDark={theme.mode === 1}
                 onChange={(isDark) => change({mode: isDark ? 1 : 0})}

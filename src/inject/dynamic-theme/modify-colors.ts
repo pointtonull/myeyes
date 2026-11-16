@@ -5,6 +5,8 @@ import {getRegisteredColor, registerColor} from '../../inject/dynamic-theme/pale
 import type {RGBA, HSLA} from '../../utils/color';
 import {parseToHSLWithCache, rgbToHSL, hslToRGB, rgbToString, rgbToHexString} from '../../utils/color';
 import {scale} from '../../utils/math';
+import {DEFAULT_STATE_COLOURS, stateTint} from '../../utils/state-colours';
+import type {StateKind} from '../../utils/state-colours';
 
 
 type HSLModifyFunction = ((hsl: HSLA) => HSLA) | ((hsl: HSLA, pole: HSLA) => HSLA) | ((hsl: HSLA, pole: HSLA, anotherPole: HSLA) => HSLA);
@@ -37,6 +39,7 @@ export const themeCacheKeys: Array<keyof Theme> = [
     'contrast',
     'grayscale',
     'sepia',
+    'stateColours', // MyEyes!
     'darkSchemeBackgroundColor',
     'darkSchemeTextColor',
     'lightSchemeBackgroundColor',
@@ -56,7 +59,7 @@ function getCacheId(rgb: RGBA, theme: Theme, poleA?: string, poleB?: string): st
     return resultId;
 }
 
-function modifyColorWithCache(rgb: RGBA, theme: Theme, modifyHSL: HSLModifyFunction, poleColor?: string, anotherPoleColor?: string): string {
+function modifyColorWithCache(rgb: RGBA, theme: Theme, modifyHSL: HSLModifyFunction, poleColor?: string, anotherPoleColor?: string, state?: StateKind): string {
     let fnCache: Map<string, string>;
     if (colorModificationCache.has(modifyHSL)) {
         fnCache = colorModificationCache.get(modifyHSL)!;
@@ -73,7 +76,17 @@ function modifyColorWithCache(rgb: RGBA, theme: Theme, modifyHSL: HSLModifyFunct
     const pole = poleColor == null ? null : parseToHSLWithCache(poleColor);
     const anotherPole = anotherPoleColor == null ? null : parseToHSLWithCache(anotherPoleColor);
     const modified = modifyHSL(hsl, pole!, anotherPole!);
-    const {r, g, b, a} = hslToRGB(modified);
+    const mapped = hslToRGB(modified);
+    const a = mapped.a;
+    let {r, g, b} = mapped;
+    // MyEyes!: give light-page states (read/unread, hover, selected) back as a tint, at the
+    // same lightness (utils/state-colours). `state` is only passed on the dark-scheme
+    // background/text paths. Tinted BEFORE the brightness/contrast/sepia/grayscale
+    // matrix, so those settings shape the tint too (grayscale 100 removes it).
+    const strength = theme.stateColours ?? DEFAULT_STATE_COLOURS;
+    if (state && strength > 0) {
+        ({r, g, b} = stateTint(rgb, {r, g, b, a}, state, strength));
+    }
     const matrix = createFilterMatrix({...theme, mode: 0});
     const [rf, gf, bf] = applyColorMatrix([r, g, b], matrix);
 
@@ -197,7 +210,7 @@ function _modifyBackgroundColor(rgb: RGBA, theme: Theme) {
         return modifyColorWithCache(rgb, theme, modifyBgColorExtended, poles[0], poles[1]);
     }
     const pole = getBgPole(theme);
-    return modifyColorWithCache(rgb, theme, modifyBgHSL, pole);
+    return modifyColorWithCache(rgb, theme, modifyBgHSL, pole, undefined, 'background');
 }
 
 export function modifyBackgroundColor(rgb: RGBA, theme: Theme, shouldRegisterColorVariable = true): string {
@@ -263,7 +276,7 @@ function _modifyForegroundColor(rgb: RGBA, theme: Theme) {
         return modifyColorWithCache(rgb, theme, modifyFgColorExtended, poles[0], poles[1]);
     }
     const pole = getFgPole(theme);
-    return modifyColorWithCache(rgb, theme, modifyFgHSL, pole);
+    return modifyColorWithCache(rgb, theme, modifyFgHSL, pole, undefined, 'text');
 }
 
 export function modifyForegroundColor(rgb: RGBA, theme: Theme, shouldRegisterColorVariable = true): string {

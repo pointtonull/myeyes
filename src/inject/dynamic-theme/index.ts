@@ -820,6 +820,7 @@ export function createOrUpdateDynamicThemeInternal(themeConfig: Theme, dynamicTh
         'lightSchemeBackgroundColor',
         'lightSchemeTextColor',
         'sepia',
+        'stateColours', // MyEyes!: re-tints the palette, no rebuild
     ];
 
     if (prevTheme && prevFixes) {
