@@ -5,8 +5,10 @@ import {isURLInList} from './url';
 /**
  * MyEyes! per-site fixes found by AI Enhance (background/glare-fixer.ts) —
  * pure patch helpers (tests: tests/unit/utils/site-fixes.tests.ts). Each fix
- * is one CSS rule for one offender, appended to the dynamic theme's fixes for
- * the site's top frame. Reset (utils/named-themes resetSite) removes them.
+ * is one CSS rule for one offender. They ride in their own stylesheet in the
+ * site's top frame (inject/site-fixes), not in the theme engine's fixes, so
+ * adding one repaints only its target; already-dark pages left undarkened get
+ * them too. Reset (utils/named-themes resetSite) removes them.
  */
 
 type FixSettings = Pick<UserSettings, 'siteFixes'>;

@@ -2,7 +2,6 @@ import type {ExtensionData, Theme, Shortcuts, UserSettings, TabInfo, TabData, Co
 import createCSSFilterStylesheet from '../generators/css-filter';
 import {getDetectorHintsFor} from '../generators/detector-hints';
 import {getDynamicThemeFixesFor} from '../generators/dynamic-theme';
-import {findRelevantFix} from '../inject/dynamic-theme/fixes';
 import createStaticStylesheet from '../generators/static-theme';
 import {createSVGFilterStylesheet, getSVGFilterMatrixValue, getSVGReverseFilterMatrixValue} from '../generators/svg-filter';
 import {ThemeEngine} from '../generators/theme-engines';
@@ -37,7 +36,7 @@ import {logInfo, logWarn} from './utils/log';
 import {setWindowTheme, resetWindowTheme} from './window-theme';
 
 
-// MyEyes!: AI Enhance on a page that wasn't darkened waits this long for the theme to paint
+// MyEyes!: AI Enhance on a site it just turned back on waits this long for the theme to paint
 const ENHANCE_THEME_SETTLE_MS = 1500;
 
 type AutomationState = 'turn-on' | 'turn-off' | 'scheme-dark' | 'scheme-light' | '';
@@ -333,17 +332,20 @@ export class Extension {
             osd(tab.id, {title: 'AI Enhance', host, note: 'MyEyes is off: turn it on first', icon: 'disabled'});
             return;
         }
-        // Enhancing a site means wanting it darkened: move it to Enabled (darken even if
-        // already dark), and give the theme a moment to paint before the first screenshot.
-        if (getSiteEnableMode(UserStorage.settings, info.url) !== 'enabled') {
-            const wasDarkened = isURLEnabled(info.url, UserStorage.settings, info);
-            await Extension.changeSettings(setSiteEnableMode(UserStorage.settings, info.url, host, 'enabled'), true);
-            if (!wasDarkened) {
-                await new Promise((resolve) => setTimeout(resolve, ENHANCE_THEME_SETTLE_MS));
-            }
+        // MyEyes must be on for the site: a Disabled site goes back to Auto (darkened if light;
+        // if already dark, left as it is). Never forced to Enabled: an already-dark page keeps
+        // its own look and gets only the specific fixes. Give a newly themed page a moment to
+        // paint (and the dark-page detector to run) before the first screenshot.
+        let page = info;
+        if (getSiteEnableMode(UserStorage.settings, info.url) === 'disabled') {
+            await Extension.changeSettings(setSiteEnableMode(UserStorage.settings, info.url, host, 'auto'), true);
+            await new Promise((resolve) => setTimeout(resolve, ENHANCE_THEME_SETTLE_MS));
+            page = await Extension.getActiveTabInfo();
         }
-        if (!isURLEnabled(info.url, UserStorage.settings, info)) {
-            // still not darkened: protected page, PDFs switched off, file access…
+        const darkened = isURLEnabled(info.url, UserStorage.settings, page);
+        const alreadyDark = !darkened && Boolean(page.isDarkThemeDetected || page.isInDarkList);
+        if (!darkened && !alreadyDark) {
+            // protected page, PDFs switched off, file access…
             osd(tab.id, {title: 'AI Enhance', host, note: 'MyEyes can\'t darken this page', icon: 'disabled'});
             return;
         }
@@ -351,6 +353,7 @@ export class Extension {
             settings: () => UserStorage.settings,
             changeSettings: (patch) => Extension.changeSettings(patch, true),
             osd,
+            darkened,
         });
     }
 
@@ -818,7 +821,10 @@ export class Extension {
     private static getTabMessage = (tabURL: string, url: string, isTopFrame: boolean, topFrameHasDarkTheme?: boolean): TabData => {
         const settings = UserStorage.settings;
         const tabInfo = Extension.getTabInfo(tabURL);
-        if (Extension.isExtensionSwitchedOn() && isURLEnabled(tabURL, settings, tabInfo) && !topFrameHasDarkTheme) {
+        // MyEyes!: "already dark" now also reaches top frames (settings broadcasts), but Enabled
+        // means "darken even if already dark", so it overrides
+        const leaveDark = Boolean(topFrameHasDarkTheme) && getSiteEnableMode(settings, tabURL) !== 'enabled';
+        if (Extension.isExtensionSwitchedOn() && isURLEnabled(tabURL, settings, tabInfo) && !leaveDark) {
             // MyEyes!: one resolver for fork → custom → pinned named theme → default theme
             const site = resolveSiteTheme(settings, tabURL);
             let theme = site.theme;
@@ -885,28 +891,13 @@ export class Extension {
                             detectDarkTheme: settings.detectDarkTheme,
                             detectorHints,
                             tameImages: settings.tameImages, // MyEyes!: inject/image-triage
+                            siteFixes: Extension.siteFixesFor(tabURL, isTopFrame), // MyEyes!: inject/site-fixes
                             theme,
                         },
                     };
                 }
                 case ThemeEngine.dynamicTheme: {
-                    let fixes = getDynamicThemeFixesFor(url, ConfigManager.DYNAMIC_THEME_FIXES_RAW!, ConfigManager.DYNAMIC_THEME_FIXES_INDEX!, UserStorage.settings.enableForPDF);
-                    // MyEyes!: AI Enhance fixes for this site (top frame: their paths come from it)
-                    const siteCSS = isTopFrame ? siteFixCSS(settings, tabURL) : '';
-                    if (siteCSS) {
-                        // the engine combines the generic fix with ONE site fix (findRelevantFix): merge
-                        // into that one so upstream's own fix for the site keeps applying
-                        const blank = (u: string) => ({url: [u], invert: [], css: '', ignoreInlineStyle: [], ignoreImageAnalysis: [],
-                            ignoreCSSUrl: [], disableStyleSheetsProxy: false, disableCustomElementRegistryProxy: false});
-                        const list = fixes && fixes.length && fixes[0].url[0] === '*' ? fixes.slice() : [blank('*')];
-                        const relevant = findRelevantFix(url, list);
-                        if (relevant) {
-                            list[relevant] = {...list[relevant], css: `${list[relevant].css || ''}\n${siteCSS}`};
-                        } else {
-                            list.push({...blank(getURLHostOrProtocol(tabURL)), css: siteCSS});
-                        }
-                        fixes = list;
-                    }
+                    const fixes = getDynamicThemeFixesFor(url, ConfigManager.DYNAMIC_THEME_FIXES_RAW!, ConfigManager.DYNAMIC_THEME_FIXES_INDEX!, UserStorage.settings.enableForPDF);
                     return {
                         type: MessageTypeBGtoCS.ADD_DYNAMIC_THEME,
                         data: {
@@ -916,6 +907,7 @@ export class Extension {
                             detectDarkTheme,
                             detectorHints,
                             tameImages: settings.tameImages, // MyEyes!: inject/image-triage
+                            siteFixes: Extension.siteFixesFor(tabURL, isTopFrame), // MyEyes!: inject/site-fixes
                         },
                     };
                 }
@@ -925,10 +917,22 @@ export class Extension {
         }
 
         logInfo(`Site is not inverted: ${tabURL}`);
-        return {
-            type: MessageTypeBGtoCS.CLEAN_UP,
-        };
+        // MyEyes!: a page left alone because it is already dark keeps its own look and gets
+        // only its AI Enhance fixes — unless the user turned MyEyes off for it
+        const alreadyDark = Boolean(topFrameHasDarkTheme || tabInfo.isInDarkList);
+        const siteOn = Extension.isExtensionSwitchedOn() && getSiteEnableMode(settings, tabURL) !== 'disabled';
+        const siteFixes = alreadyDark && siteOn ? Extension.siteFixesFor(tabURL, isTopFrame) : '';
+        return siteFixes ? {type: MessageTypeBGtoCS.CLEAN_UP, data: {siteFixes}} : {type: MessageTypeBGtoCS.CLEAN_UP};
     };
+
+    /**
+     * MyEyes!: the site's AI Enhance fixes (utils/site-fixes), for its top frame only (their
+     * paths come from it). They ride in their own stylesheet (inject/site-fixes), not in the
+     * engine's fixes, so adding one never rebuilds the theme: only its target repaints.
+     */
+    private static siteFixesFor(tabURL: string, isTopFrame: boolean): string {
+        return isTopFrame ? siteFixCSS(UserStorage.settings, tabURL) : '';
+    }
 
     //-------------------------------------
     //          User settings

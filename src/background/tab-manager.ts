@@ -20,7 +20,7 @@ declare const __THUNDERBIRD__: boolean;
 
 interface TabManagerOptions {
     getConnectionMessage: (tabURl: string, url: string, isTopFrame: boolean, topFrameHasDarkTheme?: boolean) => Promise<MessageBGtoCS>;
-    getTabMessage: (tabURL: string, url: string, isTopFrame: boolean) => MessageBGtoCS;
+    getTabMessage: (tabURL: string, url: string, isTopFrame: boolean, topFrameHasDarkTheme?: boolean) => MessageBGtoCS;
     onColorSchemeChange: (isDark: boolean) => void;
     waitUntilReady: () => Promise<void>;
 }
@@ -222,10 +222,10 @@ export default class TabManager {
                         frame.darkThemeDetected = true;
                         const {documentId, scriptId} = frame;
                         if (documentId) {
-                            const message = {
-                                type: MessageTypeBGtoCS.CLEAN_UP,
-                                scriptId,
-                            };
+                            // MyEyes!: built by getTabMessage so an already-dark page keeps its
+                            // AI Enhance fixes (a CLEAN_UP carrying them), instead of a bare CLEAN_UP
+                            const tabURL = sender.tab!.url || frame.url || '';
+                            const message = {...TabManager.getTabMessage(tabURL, frame.url || tabURL, frameId === 0, true), scriptId};
                             TabManager.sendDocumentMessage(tabId, documentId, message, frameId);
                         }
                         if (frameId === 0) {
@@ -496,7 +496,9 @@ export default class TabManager {
                             return;
                         }
 
-                        const message = TabManager.getTabMessage(tabURL, url!, isTop || false);
+                        // MyEyes!: pass the page's "already dark" state, so a settings change (e.g. a new
+                        // AI Enhance fix) doesn't re-theme an already-dark page and then undo it
+                        const message = TabManager.getTabMessage(tabURL, url!, isTop || false, Boolean(frames[0]?.darkThemeDetected));
                         message.scriptId = scriptId;
 
                         if (tab.active && isTop) {

@@ -1,6 +1,7 @@
 import {
     communityFix,
     describeOffender,
+    fixBackground,
     generatedFix,
     isGenericSelector,
     isStableClass,
@@ -74,6 +75,12 @@ describe('fix css', () => {
             .toBe('body > div.mw-page-container { background-color: #181a1b !important; background-image: none !important; }');
         expect(generatedFix(IMG, {background: '#181a1b'}, 'invert').css).toBe('#content > img.plot { filter: invert(90%) hue-rotate(180deg) !important; }');
         expect(generatedFix(IMG, {background: '#181a1b'}, 'dim').css).toBe('#content > img.plot { filter: brightness(70%) !important; }');
+    });
+
+    it('generated fixes blend into an already-dark page, else use the theme colour', () => {
+        expect(fixBackground({...WIKI, surround: {color: 'rgb(13, 17, 23)', Y: 0.006}}, '#181a1b')).toBe('rgb(13, 17, 23)');
+        expect(fixBackground({...WIKI, surround: {color: 'rgb(255, 255, 255)', Y: 1}}, '#181a1b')).toBe('#181a1b');
+        expect(fixBackground({...WIKI, surround: null}, '#181a1b')).toBe('#181a1b');
     });
 
     it('describes the offender briefly', () => {

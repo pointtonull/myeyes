@@ -5,7 +5,7 @@ import type {Box, RGBAImage} from '../utils/glare-metric';
 import {imageStats, triageImage} from '../utils/image-triage';
 import {MessageTypeBGtoCS, MessageTypeCStoBG} from '../utils/message';
 import {resolveSiteTheme} from '../utils/named-themes';
-import {communityFix, describeOffender, generatedFix, rankMatches, relevantDeclaration} from '../utils/offender';
+import {communityFix, describeOffender, fixBackground, generatedFix, rankMatches, relevantDeclaration} from '../utils/offender';
 import type {FixCandidate, Offender, RuleMatch} from '../utils/offender';
 import type {OSDMessage} from '../utils/osd-message';
 import {addSiteFix, removeSiteFix} from '../utils/site-fixes';
@@ -41,6 +41,8 @@ interface Deps {
     settings: () => UserSettings;
     changeSettings: (patch: Partial<UserSettings>) => void;
     osd: (tabId: number, message: OSDMessage) => void;
+    /** The theme engine is running on the page (false: left alone because it is already dark). */
+    darkened: boolean;
 }
 
 const CAPTURE_WIDTH = 320;
@@ -223,8 +225,9 @@ export default class GlareFixer {
         let applied = '';
         try {
             const theme = resolveSiteTheme(deps.settings(), url).theme;
-            if (theme.engine !== ThemeEngine.dynamicTheme) {
-                say('AI Enhance', 'Fixes need the Dynamic engine for now');
+            // filter engines invert the whole page: a dark fix would come out bright
+            if (deps.darkened && (theme.engine === ThemeEngine.cssFilter || theme.engine === ThemeEngine.svgFilter)) {
+                say('AI Enhance', 'Fixes don\'t work with Filter+ yet: switch to Dynamic');
                 return;
             }
             say('Looking for glare', 'Finding the brightest thing left');
@@ -258,7 +261,7 @@ export default class GlareFixer {
             say(`Found ${what}`, 'Looking for community fixes');
             const verdict = triageImage(imageStats(GlareFixer.crop(before.image, worst)), {width: 999, height: 999}).treatment;
             const community = await GlareFixer.communityCandidates(tabId, url, host, target);
-            const generated = generatedFix(target, {background: theme.darkSchemeBackgroundColor}, verdict === 'none' ? 'dim' : verdict);
+            const generated = generatedFix(target, {background: fixBackground(target, theme.darkSchemeBackgroundColor)}, verdict === 'none' ? 'dim' : verdict);
             let chosen: FixCandidate = community[0] || generated;
 
             // 4. colour fixes: try invisibly, keep the first that really darkens it

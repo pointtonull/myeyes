@@ -21,6 +21,8 @@ export interface Offender {
     kind: OffenderKind;
     /** Luminance of its computed background (null for media). */
     Y: number | null;
+    /** The opaque background around it (nearest painted ancestor, else the page's). */
+    surround?: {color: string; Y: number} | null;
 }
 
 export interface RuleMatch {
@@ -169,6 +171,14 @@ export function communityFix(match: RuleMatch): FixCandidate {
 
 export interface ThemeColors {
     background: string;
+}
+
+/**
+ * The background a generated fix paints: the page's own dark colour around the
+ * offender when there is one (an already-dark page keeps its look), else the theme's.
+ */
+export function fixBackground(target: Offender, themeBackground: string): string {
+    return target.surround && target.surround.Y < 0.12 ? target.surround.color : themeBackground;
 }
 
 /** A generated fix when no community rule fits. `verdict` comes from the region's pixels (image-triage). */

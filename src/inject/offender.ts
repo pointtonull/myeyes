@@ -89,6 +89,18 @@ function pathOf(el: Element): string {
     return parts.join(' > ');
 }
 
+/** The opaque background around an element: nearest painted ancestor, else the page's. */
+function surroundOf(el: Element): {color: string; Y: number} | null {
+    for (let e = el.parentElement; e; e = e.parentElement) {
+        const color = getComputedStyle(e).backgroundColor;
+        const Y = luminanceOf(color);
+        if (Y !== null) {
+            return {color, Y};
+        }
+    }
+    return null;
+}
+
 function describe(el: Element, kind: OffenderKind, Y: number | null): Offender {
     return {
         path: pathOf(el),
@@ -97,6 +109,7 @@ function describe(el: Element, kind: OffenderKind, Y: number | null): Offender {
         classes: [...el.classList].filter(isStableClass),
         kind,
         Y,
+        surround: surroundOf(el),
     };
 }
 

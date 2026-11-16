@@ -11,6 +11,7 @@ import {createOrUpdateDynamicTheme, removeDynamicTheme, cleanDynamicThemeCache} 
 import {collectCSS} from './dynamic-theme/css-collection';
 import {runImageTriage, stopImageTriage} from './image-triage';
 import {handleOffenderRequest} from './offender';
+import {removeSiteFixes, updateSiteFixes} from './site-fixes';
 import {showOSD} from './osd';
 import {createOrUpdateStyle, removeStyle} from './style';
 import {createOrUpdateSVGFilter, removeSVGFilter} from './svg-filter';
@@ -47,6 +48,7 @@ function cleanup() {
     removeEventListener('resume', onResume);
     cleanDynamicThemeCache();
     stopImageTriage();
+    removeSiteFixes();
     stopDarkThemeDetector();
     stopColorSchemeChangeDetector();
 }
@@ -130,6 +132,7 @@ function onMessage(message: MessageBGtoCS | MessageUItoCS | DebugMessageBGtoCS) 
             createOrUpdateStyle(css, message.type === MessageTypeBGtoCS.ADD_STATIC_THEME ? 'static' : 'filter');
             writeEnabledForHost(true);
             updateImageTriage(tameImages, message.type === MessageTypeBGtoCS.ADD_STATIC_THEME ? 'dynamic' : 'filter');
+            updateSiteFixes(message.data.siteFixes);
             if (detectDarkTheme) {
                 runDarkThemeDetector((hasDarkTheme) => {
                     if (hasDarkTheme) {
@@ -148,6 +151,7 @@ function onMessage(message: MessageBGtoCS | MessageUItoCS | DebugMessageBGtoCS) 
             createOrUpdateStyle(css, 'filter');
             writeEnabledForHost(true);
             updateImageTriage(tameImages, 'filter');
+            updateSiteFixes(message.data.siteFixes);
             if (detectDarkTheme) {
                 runDarkThemeDetector((hasDarkTheme) => {
                     if (hasDarkTheme) {
@@ -166,6 +170,7 @@ function onMessage(message: MessageBGtoCS | MessageUItoCS | DebugMessageBGtoCS) 
             createOrUpdateDynamicTheme(theme, fixes, isIFrame);
             writeEnabledForHost(true);
             updateImageTriage(tameImages, 'dynamic');
+            updateSiteFixes(message.data.siteFixes);
             if (detectDarkTheme) {
                 runDarkThemeDetector((hasDarkTheme) => {
                     if (hasDarkTheme) {
@@ -205,6 +210,8 @@ function onMessage(message: MessageBGtoCS | MessageUItoCS | DebugMessageBGtoCS) 
             removeSVGFilter();
             removeDynamicTheme();
             stopImageTriage();
+            // MyEyes!: a page left alone because it is already dark still gets its AI Enhance fixes
+            updateSiteFixes(message.data?.siteFixes);
             stopDarkThemeDetector();
             writeEnabledForHost(false);
             break;
