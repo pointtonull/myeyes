@@ -8,7 +8,17 @@ import {openExtensionPage} from '../../utils';
 import {SettingsIcon} from '../../icons';
 import MainPage from '../main-page';
 import {Page, PageViewer} from '../page-viewer';
+import {Glyph} from '../theme/glyph';
 import ThemePage from '../theme/page';
+
+type PageId = (
+    'main'
+    | 'theme'
+    | 'settings'
+    | 'site-list'
+    | 'automation'
+    | 'manage-settings'
+);
 
 interface IndexStore {
     activePage: PageId;
@@ -23,19 +33,15 @@ function Logo() {
     );
 }
 
-type PageId = (
-    'main'
-    | 'theme'
-    | 'settings'
-    | 'site-list'
-    | 'automation'
-    | 'manage-settings'
-);
-
 let popstate: (() => void) | null = null;
 isMobile && window.addEventListener('popstate', () => popstate && popstate(), {passive: true});
 
-function Pages(props: ViewProps) {
+function isTypingTarget(target: EventTarget | null) {
+    const el = target as HTMLElement | null;
+    return Boolean(el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable));
+}
+
+export default function Body(props: ViewProps) {
     const context = getContext();
     const store: IndexStore = context.store;
     if (store.activePage == null) {
@@ -73,52 +79,69 @@ function Pages(props: ViewProps) {
         }
     }
 
-    return (
-        <PageViewer
-            activePage={store.activePage}
-            onBackButtonClick={onBackClick}
-        >
-            <Page id="main">
-                <MainPage
-                    {...props}
-                    onThemeNavClick={onThemeNavClick}
-                    onSettingsNavClick={onSettingsNavClick}
-                />
-            </Page>
-            <Page id="theme">
-                <ThemePage {...props} />
-            </Page>
+    // Esc goes Back from Advanced Tweaks. Controls that use Esc themselves (an
+    // open dropdown, a text box) consume it first.
+    function onKeyDown(e: KeyboardEvent) {
+        if (e.key === 'Escape' && store.activePage === 'theme' && !e.defaultPrevented && !isTypingTarget(e.target)) {
+            e.preventDefault();
+            onBackClick();
+        }
+    }
 
-        </PageViewer>
-    );
-}
-
-export default function Body(props: ViewProps) {
-    const context = getContext();
     context.onCreate(() => {
         if (isMobile) {
             window.addEventListener('contextmenu', ({preventDefault}) => preventDefault());
         }
+        window.addEventListener('keydown', onKeyDown);
     });
     context.onRemove(() => {
         document.documentElement.classList.remove('preview');
+        window.removeEventListener('keydown', onKeyDown);
     });
+
+    const isAdvanced = store.activePage === 'theme';
 
     return (
         <body
             class={{
-                'm-body-short': !props.data.uiHighlights.includes('anniversary'),
+                'm-body-short': !isAdvanced && !props.data.uiHighlights.includes('anniversary'),
+                // Advanced Tweaks is longer than the main pane (max popup height is 600px)
+                'm-body-tall': isAdvanced,
             }}
         >
-            <header class="m-section m-header">
-                <span class="m-header__side" />
-                <Logo />
-                <button class="m-header__side m-header__gear" onclick={() => openExtensionPage('options')} aria-label="Settings">
-                    <SettingsIcon />
-                </button>
-            </header>
+            {isAdvanced ? (
+                <header class="m-section m-header m-header--sub">
+                    <button class="m-header__back" onclick={onBackClick} title="Back (Esc)" aria-label="Back">
+                        <Glyph name="back" />
+                    </button>
+                    <Logo />
+                    <h1 class="m-header__title">Advanced Tweaks</h1>
+                </header>
+            ) : (
+                <header class="m-section m-header">
+                    <span class="m-header__side" />
+                    <Logo />
+                    <button class="m-header__side m-header__gear" onclick={() => openExtensionPage('options')} aria-label="Settings">
+                        <SettingsIcon />
+                    </button>
+                </header>
+            )}
             <section class="m-section pages-section">
-                <Pages {...props} />
+                <PageViewer
+                    activePage={store.activePage}
+                    onBackButtonClick={onBackClick}
+                >
+                    <Page id="main">
+                        <MainPage
+                            {...props}
+                            onThemeNavClick={onThemeNavClick}
+                            onSettingsNavClick={onSettingsNavClick}
+                        />
+                    </Page>
+                    <Page id="theme" fill noBack>
+                        <ThemePage {...props} />
+                    </Page>
+                </PageViewer>
             </section>
             <Overlay />
         </body>

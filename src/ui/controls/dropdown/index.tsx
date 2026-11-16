@@ -12,6 +12,8 @@ interface DropDownProps<T> {
 
 interface DropDownStore {
     isOpen: boolean;
+    /** Keyboard highlight: an index into the list as drawn (selected option first). */
+    activeIndex: number;
     listNode: HTMLElement;
     selectedNode: HTMLElement;
 }
@@ -36,8 +38,62 @@ export default function DropDown<T>(props: DropDownProps<T>) {
         store.selectedNode = el as HTMLElement;
     }
 
+    function orderedOptions() {
+        return props.options
+            .slice()
+            .sort((a, b) => a.id === props.selected ? -1 : b.id === props.selected ? 1 : 0);
+    }
+
+    function choose(value: DropDownOption<T>) {
+        store.isOpen = false;
+        context.refresh();
+        props.onChange(value.id);
+    }
+
+    // MyEyes!: keyboard control. Enter/Space/arrows open the list; arrows move
+    // the highlight, Enter/Space pick it, Escape (or Tab) closes without
+    // picking. Escape is consumed while open so a page-level Escape (Back)
+    // does not also fire.
+    function onKeyDown(e: KeyboardEvent) {
+        const options = orderedOptions();
+        if (!store.isOpen) {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                onSelectedClick();
+            }
+            return;
+        }
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                store.activeIndex = Math.min(store.activeIndex + 1, options.length - 1);
+                context.refresh();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                store.activeIndex = Math.max(store.activeIndex - 1, 0);
+                context.refresh();
+                break;
+            case 'Enter':
+            case ' ':
+                e.preventDefault();
+                choose(options[store.activeIndex]);
+                break;
+            case 'Escape':
+                e.preventDefault();
+                store.isOpen = false;
+                context.refresh();
+                break;
+            case 'Tab':
+                store.isOpen = false;
+                context.refresh();
+                break;
+        }
+    }
+
     function onSelectedClick() {
         store.isOpen = !store.isOpen;
+        store.activeIndex = 0;
         context.refresh();
 
         if (store.isOpen) {
@@ -62,19 +118,16 @@ export default function DropDown<T>(props: DropDownProps<T>) {
         }
     }
 
-    function createListItem(value: DropDownOption<T>) {
+    function createListItem(value: DropDownOption<T>, index: number) {
         return (
             <span
                 class={{
                     'dropdown__list__item': true,
                     'dropdown__list__item--selected': value.id === props.selected,
+                    'dropdown__list__item--active': store.isOpen && index === store.activeIndex,
                     [props.class!]: Boolean(props.class),
                 }}
-                onclick={() => {
-                    store.isOpen = false;
-                    context.refresh();
-                    props.onChange(value.id);
-                }}
+                onclick={() => choose(value)}
             >
                 {value.content}
             </span>
@@ -95,15 +148,17 @@ export default function DropDown<T>(props: DropDownProps<T>) {
                 class="dropdown__list"
                 oncreate={saveListNode}
             >
-                {props.options
-                    .slice()
-                    .sort((a, b) => a.id === props.selected ? -1 : b.id === props.selected ? 1 : 0)
-                    .map(createListItem)}
+                {orderedOptions().map(createListItem)}
             </span>
             <span
                 class="dropdown__selected"
                 oncreate={saveSelectedNode}
                 onclick={onSelectedClick}
+                onkeydown={onKeyDown}
+                role="combobox"
+                tabindex="0"
+                aria-haspopup="listbox"
+                aria-expanded={store.isOpen ? 'true' : 'false'}
             >
                 <span class="dropdown__selected__text">
                     {selectedContent}

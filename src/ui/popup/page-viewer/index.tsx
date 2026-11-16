@@ -6,16 +6,20 @@ interface PageProps {
     id: string;
     active?: boolean;
     first?: boolean;
+    /** The content fills the page's height, so it can pin a footer and scroll the rest. */
+    fill?: boolean;
+    /** The page brings its own Back control (the header's arrow), so no bottom button. */
+    noBack?: boolean;
     onBackButtonClick?: () => void;
 }
 
 export function Page(props: PageProps, content: Malevic.Spec) {
     return (
         <div class={{'page': true, 'page--active': props.active}}>
-            <div class="page__content">
+            <div class={{'page__content': true, 'page__content--fill': props.fill}}>
                 {content}
             </div>
-            {props.first ? null : (
+            {props.first || props.noBack ? null : (
                 <Button class="page__back-button" onclick={props.onBackButtonClick}>
                     Back
                 </Button>

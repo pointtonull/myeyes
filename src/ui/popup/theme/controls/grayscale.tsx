@@ -8,7 +8,7 @@ import ThemeControl from './theme-control';
 
 export default function Grayscale(props: {value: number; onChange: (v: number) => void}) {
     return (
-        <ThemeControl label={getLocalMessage('grayscale')}>
+        <ThemeControl label={getLocalMessage('grayscale')} icon="grayscale">
             <Slider
                 value={props.value}
                 min={0}

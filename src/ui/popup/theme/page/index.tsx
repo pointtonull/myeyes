@@ -26,6 +26,7 @@ import {
     TextStroke,
     UseFont,
 } from '../controls';
+import {Glyph} from '../glyph';
 import ThemePresetPicker from '../preset-picker';
 import {getCurrentThemePreset} from '../utils';
 
@@ -175,23 +176,69 @@ function FontGroup({theme, fonts, viewProps, change}: FontGroupsProps) {
     );
 }
 
+// The Colors header shows the theme's real colours: the scheme's background
+// and text, plus the scrollbar and selection when they are set explicitly.
+function getHeaderSwatches(theme: Theme): string[] {
+    const isDark = theme.mode === 1;
+    const defaults = isDark ? DEFAULT_COLORS.darkScheme : DEFAULT_COLORS.lightScheme;
+    const bg = isDark ? theme.darkSchemeBackgroundColor : theme.lightSchemeBackgroundColor;
+    const fg = isDark ? theme.darkSchemeTextColor : theme.lightSchemeTextColor;
+    const swatches = [bg === 'auto' ? defaults.background : bg, fg === 'auto' ? defaults.text : fg];
+    for (const custom of [theme.scrollbarColor, theme.selectionColor]) {
+        if (custom && custom !== 'auto') {
+            swatches.push(custom);
+        }
+    }
+    return swatches;
+}
+
+// Everything but Reset scrolls; Reset stays pinned under it, always reachable.
+function ThemeScroll({}, ...children: Malevic.Child[]) {
+    return <div class="adv-scroll">{...children}</div>;
+}
+
 export default function ThemePage(props: ViewProps) {
     const {theme, change} = getCurrentThemePreset(props);
 
     return (
         <section class="m-section theme-page">
-            <ThemePresetPicker {...props} />
-            <Collapsible>
-                <Collapsible.Group id="main" label="Brightness, contrast, mode">
-                    <MainGroup theme={theme} change={change} />
-                </Collapsible.Group>
-                <Collapsible.Group id="colors" label="Colors">
-                    <ColorsGroup theme={theme} change={change} colorSchemes={props.data.colorScheme} />
-                </Collapsible.Group>
-                <Collapsible.Group id="font" label="Font & more">
-                    <FontGroup theme={theme} fonts={props.fonts!} viewProps={props} change={change} />
-                </Collapsible.Group>
-            </Collapsible>
+            <ThemeScroll>
+                <div class="adv-hero">
+                    <img class="adv-hero__mascot" src="../assets/images/myeyes-lab-mascot.png" alt="" draggable="false" />
+                    <p class="adv-hero__tagline">Fine-tune how pages look and feel.</p>
+                </div>
+                <div class="adv-theme">
+                    <Glyph name="layers" class="adv-theme__icon" />
+                    <ThemePresetPicker {...props} />
+                </div>
+                <Collapsible>
+                    <Collapsible.Group
+                        id="main"
+                        label="Adjustments"
+                        hint="Brightness, contrast, color tone"
+                        icon="adjustments"
+                    >
+                        <MainGroup theme={theme} change={change} />
+                    </Collapsible.Group>
+                    <Collapsible.Group
+                        id="colors"
+                        label="Colors"
+                        hint="Page and text colors"
+                        icon="colors"
+                        swatches={getHeaderSwatches(theme)}
+                    >
+                        <ColorsGroup theme={theme} change={change} colorSchemes={props.data.colorScheme} />
+                    </Collapsible.Group>
+                    <Collapsible.Group
+                        id="font"
+                        label="Font & more"
+                        hint="Text rendering and readability"
+                        icon="font"
+                    >
+                        <FontGroup theme={theme} fonts={props.fonts!} viewProps={props} change={change} />
+                    </Collapsible.Group>
+                </Collapsible>
+            </ThemeScroll>
             <ResetButton {...props} />
         </section>
     );

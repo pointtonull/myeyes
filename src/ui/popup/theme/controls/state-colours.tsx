@@ -14,7 +14,7 @@ import ThemeControl from './theme-control';
  */
 export default function StateColours(props: {value: number | undefined; onChange: (v: number) => void}) {
     return (
-        <ThemeControl label={getLocalMessage('state_colours')}>
+        <ThemeControl label={getLocalMessage('state_colours')} icon="dropper">
             <Slider
                 value={props.value ?? DEFAULT_STATE_COLOURS}
                 min={0}

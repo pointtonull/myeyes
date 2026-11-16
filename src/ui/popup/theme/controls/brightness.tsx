@@ -8,7 +8,7 @@ import ThemeControl from './theme-control';
 
 export default function Brightness(props: {value: number; onChange: (v: number) => void}) {
     return (
-        <ThemeControl label={getLocalMessage('brightness')}>
+        <ThemeControl label={getLocalMessage('brightness')} icon="brightness">
             <Slider
                 value={props.value}
                 min={50}

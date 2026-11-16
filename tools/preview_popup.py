@@ -165,6 +165,16 @@ function meClickTarget(sel) {{
 window.addEventListener('load', function() {{
   CLICKS.forEach(function(sel, i) {{
     setTimeout(function() {{
+      // "key:SELECTOR|Key" focuses SELECTOR and sends it a keydown for Key
+      // (bubbling, like a real key press), e.g. "key:.dropdown__selected|Enter"
+      if (sel.indexOf('key:') === 0) {{
+        var parts = sel.slice(4).split('|');
+        var target = document.querySelector(parts[0]);
+        if (!target) {{ meShowErr('harness: nothing matches ' + parts[0]); return; }}
+        target.focus();
+        target.dispatchEvent(new KeyboardEvent('keydown', {{key: parts[1], bubbles: true, cancelable: true}}));
+        return;
+      }}
       var el = meClickTarget(sel);
       if (el) {{ el.click(); }} else {{ meShowErr('harness: nothing matches ' + sel); }}
     }}, 1200 + i * 400);

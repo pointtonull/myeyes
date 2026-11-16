@@ -8,7 +8,7 @@ import ThemeControl from './theme-control';
 
 export default function Contrast(props: {value: number; onChange: (v: number) => void}) {
     return (
-        <ThemeControl label={getLocalMessage('contrast')}>
+        <ThemeControl label={getLocalMessage('contrast')} icon="contrast">
             <Slider
                 value={props.value}
                 min={50}

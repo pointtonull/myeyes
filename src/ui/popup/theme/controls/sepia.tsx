@@ -8,7 +8,7 @@ import ThemeControl from './theme-control';
 
 export default function Sepia(props: {value: number; onChange: (v: number) => void}) {
     return (
-        <ThemeControl label={getLocalMessage('sepia')}>
+        <ThemeControl label={getLocalMessage('sepia')} icon="sepia">
             <Slider
                 value={props.value}
                 min={0}

@@ -201,11 +201,54 @@ export default function Slider(props: SliderProps) {
         refreshOnWheel();
     }
 
+    // MyEyes!: keyboard control (arrows, PageUp/PageDown, Home/End), so the
+    // slider is reachable without a pointer. Each key press commits at once,
+    // like a click on the track does.
+    function onKeyDown(e: KeyboardEvent) {
+        const {min, max, step, onChange} = props;
+        const current = getValue();
+        let next: number | null = null;
+        switch (e.key) {
+            case 'ArrowLeft':
+            case 'ArrowDown':
+                next = current - step;
+                break;
+            case 'ArrowRight':
+            case 'ArrowUp':
+                next = current + step;
+                break;
+            case 'PageDown':
+                next = current - step * 10;
+                break;
+            case 'PageUp':
+                next = current + step * 10;
+                break;
+            case 'Home':
+                next = min;
+                break;
+            case 'End':
+                next = max;
+                break;
+        }
+        if (next == null) {
+            return;
+        }
+        e.preventDefault();
+        onChange(stickToStep(clamp(next, min, max), step));
+    }
+
     return (
         <span
             class={{'slider': true, 'slider--active': store.isActive}}
             oncreate={onRootCreate}
             onmousedown={onPointerDown}
+            onkeydown={onKeyDown}
+            role="slider"
+            tabindex="0"
+            aria-valuemin={String(props.min)}
+            aria-valuemax={String(props.max)}
+            aria-valuenow={String(stickToStep(getValue(), props.step))}
+            aria-valuetext={formattedValue}
         >
             <span
                 class="slider__track"
