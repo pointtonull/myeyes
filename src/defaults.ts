@@ -2,7 +2,7 @@ import {extendThemeDefaults} from '@plus/defaults';
 import type {Theme, UserSettings} from './definitions';
 import {ThemeEngine} from './generators/theme-engines';
 import {AutomationMode} from './utils/automation';
-import {DEFAULT_STATE_COLOURS} from './utils/state-colours';
+import {DEFAULT_STATE_COLOURS, DEFAULT_STATE_HUE_FROM, DEFAULT_STATE_HUE_TO} from './utils/state-colours';
 import type {ParsedColorSchemeConfig} from './utils/colorscheme-parser';
 import {isMacOS, isWindows, isCSSColorSchemePropSupported, isEdge, isMobile} from './utils/platform';
 
@@ -42,6 +42,8 @@ export const DEFAULT_THEME: Theme = {
     darkColorScheme: 'Default',
     immediateModify: false,
     stateColours: DEFAULT_STATE_COLOURS, // utils/state-colours
+    stateHueFrom: DEFAULT_STATE_HUE_FROM,
+    stateHueTo: DEFAULT_STATE_HUE_TO,
 };
 
 if (__PLUS__) {

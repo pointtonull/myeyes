@@ -1,0 +1,38 @@
+// Glyphs are masks: the shape comes from the SVG's alpha, the colour from
+// `background` (currentColor unless a place overrides it). One rule per glyph
+// because a url() inside a custom property would resolve against the wrong
+// stylesheet.
+.glyph-mask(@name) {
+    -webkit-mask-image: url("../assets/images/myeyes/glyphs/@{name}.svg");
+    mask-image: url("../assets/images/myeyes/glyphs/@{name}.svg");
+}
+
+.me-glyph {
+    background-color: currentColor;
+    display: inline-block;
+    flex: none;
+    height: 1.15rem;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    width: 1.15rem;
+}
+
+.me-glyph--adjustments { .glyph-mask(adjustments); }
+.me-glyph--back { .glyph-mask(back); }
+.me-glyph--brightness { .glyph-mask(brightness); }
+.me-glyph--chevron-down { .glyph-mask(chevron-down); }
+.me-glyph--chevron-up { .glyph-mask(chevron-up); }
+.me-glyph--colors { .glyph-mask(colors); }
+.me-glyph--contrast { .glyph-mask(contrast); }
+.me-glyph--dropper { .glyph-mask(dropper); }
+.me-glyph--font { .glyph-mask(font); }
+.me-glyph--grayscale { .glyph-mask(grayscale); }
+.me-glyph--layers { .glyph-mask(layers); }
+.me-glyph--mode { .glyph-mask(mode); }
+.me-glyph--reset { .glyph-mask(reset); }
+.me-glyph--scheme { .glyph-mask(scheme); }
+.me-glyph--sepia { .glyph-mask(sepia); }

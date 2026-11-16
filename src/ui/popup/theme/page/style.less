@@ -1,33 +1,9 @@
 @import "../../../theme";
+@import "./glyph";
 @import "./collapsible-panel";
 
 .theme-page {
-    .theme-preset-picker.dropdown {
-        height: @size-control-inner + 2 * @size-border;
-    }
-
-    .theme-preset-picker {
-        .dropdown {
-            &__selected {
-                height: @size-control-inner + 2 * @size-border;
-            }
-        
-            &__list {
-                border: @size-border solid @color-border;
-                border-top: none;
-                box-shadow: 0 0 0.25rem 0.0625rem black;
-                box-sizing: border-box;
-
-                &__item {
-                    min-height: @size-control-inner + 2 * @size-border;
-                }
-            }
-        }
-    }
-
-    .theme-control:not(:first-child) {
-        margin-top: @indent-small;
-    }
+    // dropdowns, rows and the preset picker are styled in ./advanced.less
 
     .font-picker {
         box-sizing: border-box;
@@ -139,3 +115,6 @@
         }
     }
 }
+
+// last, so it wins over the stock rules above at equal specificity
+@import "./advanced";

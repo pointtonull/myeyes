@@ -7,9 +7,20 @@ interface ThemePresets {
     change: (config: Partial<Theme>) => void;
 }
 
-// MyEyes!: the current site's theme. Edits fork it per site (see
-// utils/named-themes) instead of changing a shared theme in place; the user
-// commits them with Save / Save as from the Theme menu.
+/**
+ * MyEyes!: edit the current website's theme, and only that: the edit forks it
+ * per site (see utils/named-themes) instead of changing a shared theme in
+ * place; the user commits it with Save / Save as from the Theme menu. Leaves
+ * the scheme automation alone (getCurrentThemePreset's change does not).
+ */
+export function changeSiteTheme(props: ViewProps, config: Partial<Theme>): void {
+    const url = props.data.activeTab.url;
+    props.actions.changeSettings(
+        editSiteTheme(props.data.settings, url, getURLHostOrProtocol(url), config),
+    );
+}
+
+// MyEyes!: the current site's theme and a way to edit it (changeSiteTheme).
 export function getCurrentThemePreset(props: ViewProps): ThemePresets {
     const url = props.data.activeTab.url;
     let theme = resolveSiteTheme(props.data.settings, url).theme;
@@ -19,9 +30,7 @@ export function getCurrentThemePreset(props: ViewProps): ThemePresets {
     }
 
     function setTheme(config: Partial<Theme>) {
-        props.actions.changeSettings(
-            editSiteTheme(props.data.settings, url, getURLHostOrProtocol(url), config),
-        );
+        changeSiteTheme(props, config);
         if (
             config.mode != null &&
             props.data.settings.automation.behavior === 'Scheme'

@@ -24,6 +24,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.join(HERE, "..")
 SRC = os.path.join(REPO, "brand", "reference", "popup-mockup.png")
 OUT = os.path.join(REPO, "src", "ui", "assets", "images", "myeyes-mascot.png")
+LAB_OUT = os.path.join(REPO, "src", "ui", "assets", "images", "myeyes-lab-mascot.png")
+LAB_BOX = (0.0, 0.0, 1.0, 0.85)  # drops the "The Experimenter" caption under the rack
 
 # crop box as fractions of the mockup (left, top, right, bottom)
 BOX = (0.03, 0.085, 0.395, 0.312)
@@ -35,9 +37,9 @@ LAPTOP = [(47, 153), (192, 170), (212, 236), (290, 250), (298, 258),
           (225, 281), (78, 257)]
 
 
-def cut(img):
+def cut(img, box_fractions=BOX, protect_polygon=LAPTOP):
     w, h = img.size
-    box = tuple(int(f * s) for f, s in zip(BOX, (w, h, w, h)))
+    box = tuple(int(f * s) for f, s in zip(box_fractions, (w, h, w, h)))
     rgb = np.asarray(img.convert("RGB").crop(box), dtype=np.float32)
 
     border = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]])
@@ -57,9 +59,10 @@ def cut(img):
     # the border where the dark base meets the dark background, so keying alone
     # punches it out. Keep it opaque with a polygon slightly inset from its
     # bright rim (crop coordinates; the source mockup is fixed).
-    protect = Image.new("L", (rgb.shape[1], rgb.shape[0]), 0)
-    ImageDraw.Draw(protect).polygon(LAPTOP, fill=255)
-    alpha[np.asarray(protect) > 0] = 1.0
+    if protect_polygon:
+        protect = Image.new("L", (rgb.shape[1], rgb.shape[0]), 0)
+        ImageDraw.Draw(protect).polygon(protect_polygon, fill=255)
+        alpha[np.asarray(protect) > 0] = 1.0
     alpha = ndimage.gaussian_filter(alpha, sigma=0.7)
 
     rgba = np.dstack([rgb, alpha * 255.0]).clip(0, 255).astype(np.uint8)
@@ -92,12 +95,20 @@ def previews(mascot, directory):
 def main():
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--preview", help="also write composites into this directory")
+    parser.add_argument("--lab", metavar="IMAGE",
+                        help="instead, cut the lab (Advanced Tweaks) mascot out of this "
+                             "whole-image crop into src/ui/assets/images/myeyes-lab-mascot.png")
     args = parser.parse_args()
 
-    mascot = cut(Image.open(SRC))
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    mascot.save(OUT)
-    print(OUT, mascot.size)
+    if args.lab:
+        # the image is the mascot on its backdrop, minus the concept board's
+        # caption strip at the bottom; no laptop to protect
+        mascot, out = cut(Image.open(args.lab), LAB_BOX, None), LAB_OUT
+    else:
+        mascot, out = cut(Image.open(SRC)), OUT
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    mascot.save(out)
+    print(out, mascot.size)
     if args.preview:
         previews(mascot, args.preview)
         print("previews in", args.preview)

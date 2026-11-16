@@ -1,26 +1,29 @@
 import {m} from 'malevic';
 
 import {getLocalMessage} from '../../../../utils/locales';
-import {DEFAULT_STATE_COLOURS} from '../../../../utils/state-colours';
-import {Slider} from '../../../controls';
+import {DEFAULT_STATE_HUE_FROM, DEFAULT_STATE_HUE_TO} from '../../../../utils/state-colours';
 
-import {formatPercent} from './format';
+import HueRange from './hue-range';
+import type {HueRangeValue} from './hue-range';
 import ThemeControl from './theme-control';
 
 /**
- * MyEyes!: how strongly light-page states (read/unread, hover, selected) come
- * back as a tint in dark mode, at the same lightness (utils/state-colours).
- * 0 = Dark Reader's own mapping.
+ * MyEyes!: how light-page states (read/unread, hover, selected) come back as a
+ * tint in dark mode, at the same lightness (utils/state-colours): the value of
+ * a state (how far from white it was) is turned into a hue, on a scale from
+ * the first handle's hue to the second's. Greys follow the scale; the more
+ * saturated a colour, the more it keeps its own hue.
  */
-export default function StateColours(props: {value: number | undefined; onChange: (v: number) => void}) {
+export default function StateColours(props: {
+    from: number | undefined;
+    to: number | undefined;
+    onChange: (range: HueRangeValue) => void;
+}) {
     return (
-        <ThemeControl label={getLocalMessage('state_colours')}>
-            <Slider
-                value={props.value ?? DEFAULT_STATE_COLOURS}
-                min={0}
-                max={100}
-                step={1}
-                formatValue={formatPercent}
+        <ThemeControl label={getLocalMessage('state_colours')} icon="dropper" stacked>
+            <HueRange
+                from={props.from ?? DEFAULT_STATE_HUE_FROM}
+                to={props.to ?? DEFAULT_STATE_HUE_TO}
                 onChange={props.onChange}
             />
         </ThemeControl>

@@ -1,25 +1,27 @@
 import {m} from 'malevic';
 import {getContext} from 'malevic/dom';
 
+import {Glyph} from '../glyph';
+import type {GlyphName} from '../glyph';
+
 interface CollapsiblePanelStore {
-    activeGroup: string;
+    activeGroup: string | null;
 }
 
+// MyEyes! accordion: every group keeps its header; at most one is open, and
+// clicking the open one closes it. Closed groups are not rendered, so their
+// controls hold no state (sliders, dropdowns) while hidden.
 function CollapsiblePanel({}, ...groups: Array<Malevic.ComponentSpec<CollapsibleGroupProps>>) {
     const context = getContext();
     const store: CollapsiblePanelStore = context.store;
-    if (store.activeGroup == null) {
+    if (store.activeGroup === undefined) {
         store.activeGroup = groups[0].props.id;
     }
     return (
         <div class="collapsible-panel">
-            {...groups.map((spec, i) => {
-                const activeIndex = groups.findIndex((g) => store.activeGroup === g.props.id);
-                const collapsed = i !== activeIndex;
-                const collapseTop = i < activeIndex;
-                const collapseBottom = i > activeIndex;
-                const onExpand = () => {
-                    store.activeGroup = spec.props.id;
+            {...groups.map((spec) => {
+                const onToggle = () => {
+                    store.activeGroup = store.activeGroup === spec.props.id ? null : spec.props.id;
                     context.refresh();
                 };
 
@@ -27,10 +29,8 @@ function CollapsiblePanel({}, ...groups: Array<Malevic.ComponentSpec<Collapsible
                     ...spec,
                     props: {
                         ...spec.props,
-                        collapsed,
-                        collapseBottom,
-                        collapseTop,
-                        onExpand,
+                        open: store.activeGroup === spec.props.id,
+                        onToggle,
                     },
                 };
             })}
@@ -41,29 +41,49 @@ function CollapsiblePanel({}, ...groups: Array<Malevic.ComponentSpec<Collapsible
 interface CollapsibleGroupProps {
     id: string;
     label: string;
-    collapsed?: boolean;
-    collapseBottom?: boolean;
-    collapseTop?: boolean;
-    onExpand?: () => void;
+    hint: string;
+    icon: GlyphName;
+    /** Colours shown at the right of the header (the Colors group's real colours). */
+    swatches?: string[];
+    open?: boolean;
+    onToggle?: () => void;
 }
 
 function Group(props: CollapsibleGroupProps, content: Malevic.Child) {
+    const bodyId = `collapsible-${props.id}`;
     return (
-        <div
+        <section
             class={{
                 'collapsible-panel__group': true,
-                'collapsible-panel__group--collapsed': props.collapsed,
-                'collapsible-panel__group--collapse-top': props.collapseTop,
-                'collapsible-panel__group--collapse-bottom': props.collapseBottom,
+                'collapsible-panel__group--open': props.open,
             }}
         >
-            <div class="collapsible-panel__group__content">
-                {content}
-            </div>
-            <span role="button" class="collapsible-panel__group__expand-button" onclick={props.onExpand}>
-                {props.label}
-            </span>
-        </div>
+            <button
+                class="collapsible-panel__head"
+                aria-expanded={props.open ? 'true' : 'false'}
+                aria-controls={bodyId}
+                onclick={props.onToggle}
+            >
+                <Glyph name={props.open ? 'chevron-up' : 'chevron-down'} class="collapsible-panel__chevron" />
+                <Glyph name={props.icon} class={`collapsible-panel__icon collapsible-panel__icon--${props.id}`} />
+                <span class="collapsible-panel__text">
+                    <span class="collapsible-panel__label">{props.label}</span>
+                    <span class="collapsible-panel__hint">{props.hint}</span>
+                </span>
+                {props.swatches && props.swatches.length ? (
+                    <span class="collapsible-panel__swatches" aria-hidden="true">
+                        {props.swatches.map((color) => (
+                            <span class="collapsible-panel__swatch" style={{'background-color': color}} />
+                        ))}
+                    </span>
+                ) : null}
+            </button>
+            {props.open ? (
+                <div class="collapsible-panel__body" id={bodyId}>
+                    {content}
+                </div>
+            ) : null}
+        </section>
     );
 }
 

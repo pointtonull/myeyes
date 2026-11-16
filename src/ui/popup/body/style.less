@@ -40,7 +40,8 @@
     }
 
     // gear: a round GlowButton, softly lit from the top-left like the mockup
-    .m-header__gear {
+    .m-header__gear,
+    .m-header__back {
         .me-gb();
         .me-gb-hover();
         --gb-surface-top: rgba(64, 54, 128, 0.95);
@@ -61,10 +62,50 @@
         justify-content: center;
         padding: 0;
 
-        svg {
+        svg,
+        .me-glyph {
             height: 1.05rem;
             width: 1.05rem;
         }
+    }
+
+    // Advanced Tweaks header: Back arrow, a smaller logo, then the page title
+    .m-header--sub {
+        gap: 0.5rem;
+        justify-content: flex-start;
+
+        .m-header__back {
+            flex: none;
+            width: 1.85rem;
+        }
+
+        .m-logo {
+            flex: none;
+            margin: 0;
+
+            &__icon {
+                height: 1.2rem;
+                width: 2.25rem;
+            }
+
+            &__text {
+                font-size: 1.1rem;
+            }
+        }
+    }
+
+    .m-header__title {
+        border-left: 1px solid rgba(165, 138, 203, 0.5);
+        color: #b9a2ff;
+        flex: 1 1 auto;
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin: 0;
+        min-width: 0;
+        overflow: hidden;
+        padding-left: 0.6rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .m-logo {
@@ -323,6 +364,11 @@
         height: 22.8rem;
         margin-top: 1rem;
     }
+
+    // Advanced Tweaks: taller (a popup may be 600px high), the page scrolls
+    // inside and the header with its Back arrow stays put
+    .m-body-tall { height: 34rem; }
+    .m-body-tall .m-section.pages-section { height: 31.15rem; }
 }
 
 html:not(.mobile) {

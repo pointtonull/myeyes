@@ -5,7 +5,7 @@ import {getRegisteredColor, registerColor} from '../../inject/dynamic-theme/pale
 import type {RGBA, HSLA} from '../../utils/color';
 import {parseToHSLWithCache, rgbToHSL, hslToRGB, rgbToString, rgbToHexString} from '../../utils/color';
 import {scale} from '../../utils/math';
-import {DEFAULT_STATE_COLOURS, stateTint} from '../../utils/state-colours';
+import {DEFAULT_STATE_COLOURS, DEFAULT_STATE_HUE_FROM, DEFAULT_STATE_HUE_TO, stateTint} from '../../utils/state-colours';
 import type {StateKind} from '../../utils/state-colours';
 
 
@@ -40,6 +40,8 @@ export const themeCacheKeys: Array<keyof Theme> = [
     'grayscale',
     'sepia',
     'stateColours', // MyEyes!
+    'stateHueFrom', // MyEyes!
+    'stateHueTo', // MyEyes!
     'darkSchemeBackgroundColor',
     'darkSchemeTextColor',
     'lightSchemeBackgroundColor',
@@ -85,7 +87,10 @@ function modifyColorWithCache(rgb: RGBA, theme: Theme, modifyHSL: HSLModifyFunct
     // matrix, so those settings shape the tint too (grayscale 100 removes it).
     const strength = theme.stateColours ?? DEFAULT_STATE_COLOURS;
     if (state && strength > 0) {
-        ({r, g, b} = stateTint(rgb, {r, g, b, a}, state, strength));
+        ({r, g, b} = stateTint(
+            rgb, {r, g, b, a}, state, strength,
+            theme.stateHueFrom ?? DEFAULT_STATE_HUE_FROM, theme.stateHueTo ?? DEFAULT_STATE_HUE_TO,
+        ));
     }
     const matrix = createFilterMatrix({...theme, mode: 0});
     const [rf, gf, bf] = applyColorMatrix([r, g, b], matrix);

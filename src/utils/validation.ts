@@ -2,6 +2,7 @@ import {DEFAULT_SETTINGS, DEFAULT_THEME} from '../defaults';
 import type {UserSettings, Theme, ThemePreset, CustomSiteConfig, TimeSettings, LocationSettings, Automation} from '../definitions';
 
 import {AutomationMode} from './automation';
+import {MAX_STATE_HUE} from './state-colours';
 
 function isBoolean(x: any): x is boolean {
     return typeof x === 'boolean';
@@ -243,6 +244,8 @@ export function validateTheme(theme: Partial<Theme> | null | undefined): ThemeVa
     validateProperty(theme, 'darkColorScheme', isNonEmptyString, DEFAULT_THEME);
     validateProperty(theme, 'immediateModify', isBoolean, DEFAULT_THEME);
     validateProperty(theme, 'stateColours', isNumberBetween(0, 100), DEFAULT_THEME);
+    validateProperty(theme, 'stateHueFrom', isNumberBetween(-MAX_STATE_HUE, MAX_STATE_HUE), DEFAULT_THEME);
+    validateProperty(theme, 'stateHueTo', isNumberBetween(-MAX_STATE_HUE, MAX_STATE_HUE), DEFAULT_THEME);
 
     return {errors, theme};
 }
