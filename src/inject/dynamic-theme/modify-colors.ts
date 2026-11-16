@@ -5,6 +5,8 @@ import {getRegisteredColor, registerColor} from '../../inject/dynamic-theme/pale
 import type {RGBA, HSLA} from '../../utils/color';
 import {parseToHSLWithCache, rgbToHSL, hslToRGB, rgbToString, rgbToHexString} from '../../utils/color';
 import {scale} from '../../utils/math';
+import {DEFAULT_STATE_COLOURS, stateTint} from '../../utils/state-colours';
+import type {StateKind} from '../../utils/state-colours';
 
 
 type HSLModifyFunction = ((hsl: HSLA) => HSLA) | ((hsl: HSLA, pole: HSLA) => HSLA) | ((hsl: HSLA, pole: HSLA, anotherPole: HSLA) => HSLA);
@@ -37,6 +39,7 @@ export const themeCacheKeys: Array<keyof Theme> = [
     'contrast',
     'grayscale',
     'sepia',
+    'stateColours', // MyEyes!
     'darkSchemeBackgroundColor',
     'darkSchemeTextColor',
     'lightSchemeBackgroundColor',
@@ -56,7 +59,7 @@ function getCacheId(rgb: RGBA, theme: Theme, poleA?: string, poleB?: string): st
     return resultId;
 }
 
-function modifyColorWithCache(rgb: RGBA, theme: Theme, modifyHSL: HSLModifyFunction, poleColor?: string, anotherPoleColor?: string): string {
+function modifyColorWithCache(rgb: RGBA, theme: Theme, modifyHSL: HSLModifyFunction, poleColor?: string, anotherPoleColor?: string, state?: StateKind): string {
     let fnCache: Map<string, string>;
     if (colorModificationCache.has(modifyHSL)) {
         fnCache = colorModificationCache.get(modifyHSL)!;
@@ -77,9 +80,17 @@ function modifyColorWithCache(rgb: RGBA, theme: Theme, modifyHSL: HSLModifyFunct
     const matrix = createFilterMatrix({...theme, mode: 0});
     const [rf, gf, bf] = applyColorMatrix([r, g, b], matrix);
 
-    const color = (a === 1 ?
-        rgbToHexString({r: rf, g: gf, b: bf}) :
-        rgbToString({r: rf, g: gf, b: bf, a}));
+    // MyEyes!: give light-page states (read/unread, hover, selected) back as a tint, at the
+    // same lightness (utils/state-colours); dark schemes only, cached like the rest
+    let out: RGBA = {r: rf, g: gf, b: bf, a};
+    const strength = theme.stateColours ?? DEFAULT_STATE_COLOURS;
+    if (state && theme.mode === 1 && strength > 0) {
+        out = stateTint(rgb, out, state, strength);
+    }
+
+    const color = (out.a === 1 ?
+        rgbToHexString({r: out.r, g: out.g, b: out.b}) :
+        rgbToString(out));
 
     fnCache.set(id, color);
     return color;
@@ -197,7 +208,7 @@ function _modifyBackgroundColor(rgb: RGBA, theme: Theme) {
         return modifyColorWithCache(rgb, theme, modifyBgColorExtended, poles[0], poles[1]);
     }
     const pole = getBgPole(theme);
-    return modifyColorWithCache(rgb, theme, modifyBgHSL, pole);
+    return modifyColorWithCache(rgb, theme, modifyBgHSL, pole, undefined, 'background');
 }
 
 export function modifyBackgroundColor(rgb: RGBA, theme: Theme, shouldRegisterColorVariable = true): string {
@@ -263,7 +274,7 @@ function _modifyForegroundColor(rgb: RGBA, theme: Theme) {
         return modifyColorWithCache(rgb, theme, modifyFgColorExtended, poles[0], poles[1]);
     }
     const pole = getFgPole(theme);
-    return modifyColorWithCache(rgb, theme, modifyFgHSL, pole);
+    return modifyColorWithCache(rgb, theme, modifyFgHSL, pole, undefined, 'text');
 }
 
 export function modifyForegroundColor(rgb: RGBA, theme: Theme, shouldRegisterColorVariable = true): string {

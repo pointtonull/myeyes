@@ -40,6 +40,7 @@ export const DEFAULT_THEME: Theme = {
     lightColorScheme: 'Default',
     darkColorScheme: 'Default',
     immediateModify: false,
+    stateColours: 50, // utils/state-colours DEFAULT_STATE_COLOURS
 };
 
 if (__PLUS__) {

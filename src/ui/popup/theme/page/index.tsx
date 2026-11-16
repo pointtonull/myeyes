@@ -20,6 +20,7 @@ import {
     Scrollbar,
     SelectionColorEditor,
     Sepia,
+    StateColours,
     StyleSystemControls,
     TextColor,
     TextStroke,
@@ -53,6 +54,10 @@ function MainGroup({theme, change}: ThemeGroupProps) {
             <Grayscale
                 value={theme.grayscale}
                 onChange={(v) => change({grayscale: v})}
+            />
+            <StateColours
+                value={theme.stateColours}
+                onChange={(v) => change({stateColours: v})}
             />
             <Scheme
                 isDark={theme.mode === 1}
