@@ -22,6 +22,7 @@
 
 - 🌙 Proactive dark mode for every website, using Dark Reader's dynamic engine, or **Filter+** (a simpler, filter-based engine) when you prefer it.
 - 🔄 Community per-site fixes, fetched and cached from upstream at runtime, with a bundled offline fallback, so popular sites keep looking right.
+- 🖼️ **Tames bright images** (on by default): diagrams and charts on white backgrounds are inverted so they sit dark like the page, bright photos are dimmed (never inverted: a negative photo is worse), and black logos on transparent backgrounds stay visible. Under Filter+ the engine's own image filter handles photos. There's no switch for it in the UI yet.
 
 **One pane, per site**
 
@@ -58,19 +59,11 @@
 - **Community userstyles** (UserStyles.world / USO-archive) as a second per-site source next to Dark Reader's fixes. A UserCSS reader that sanitizes untrusted community CSS is in the tree; fetching, caching and per-site resolution are next.
 - **AI-enhanced page adaptation using local, on-device models** (declutter, improve readability; nothing leaves your machine). *AI Enhance* and *Clean Up* are placeholders in the popup until this lands. A render metric that scores glare against retained page structure is in the tree to judge the results: models advise, pixels decide.
 
-## Build
+## Contribute 💜
 
-Requires [Node.js](https://nodejs.org/) (LTS+).
+Setup, the build and the dev loop, hard-won tips, and how to open a pull request all live in **[CONTRIBUTE.md](CONTRIBUTE.md)**. You don't need to be a hacker to help (translations, bug reports and feedback count).
 
-```sh
-npm install
-npm run build        # release build -> build/release/
-npm run debug        # unpacked build -> build/debug/<browser>/
-npm run debug:watch  # same, rebuilt as you edit
-npm test             # unit tests
-```
-
-Load `build/debug/firefox` via `about:debugging` → *Load Temporary Add-on*.
+> **Easiest start:** open [Claude Code](https://claude.com/claude-code), OpenAI Codex or any coding agent in this folder and say *"Read CONTRIBUTE.md and get me set up to hack on MyEyes!"* It will take it from there.
 
 ## Credits
 

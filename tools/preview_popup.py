@@ -17,14 +17,21 @@ HTTP so the popup renders as a plain page, and let FoxMCP shoot it full-res.
 
 Needs: a debug build (build/debug/firefox), the running FoxMCP Firefox, Pillow
 (run with ~/.virtualenvs/p3/bin/python), and ~/bin/foxmcp.screenshot.
+
+Anyone else (no FoxMCP): `--serve` — or simply no ~/bin/foxmcp.screenshot —
+skips the capture, serves the same page and prints its URL; open that in any
+browser (or hand it to an agent's browser tool) and screenshot the popup, then
+Ctrl-C. The scenario and --click steps still apply. See CONTRIBUTE.md.
 """
 import argparse
 import http.server
 import json
 import os
+import signal
 import socket
 import socketserver
 import subprocess
+import sys
 import threading
 import time
 
@@ -252,10 +259,19 @@ def main():
     parser.add_argument("--click", action="append", default=[],
                         help="CSS selector (or text=…) to click after render, in order; repeatable")
     parser.add_argument("--name", default="popup_preview", help="output file stem")
+    parser.add_argument("--build", help="a build dir to preview instead of this checkout's build/debug/firefox "
+                                        "(e.g. a baseline worktree's, for before/after shots)")
+    parser.add_argument("--serve", action="store_true",
+                        help="don't capture: serve the preview and print its URL so any browser can "
+                             "(the default when ~/bin/foxmcp.screenshot is missing); Ctrl-C stops it")
     args = parser.parse_args()
 
+    global BUILD, POPUP_HTML
+    if args.build:
+        BUILD = os.path.abspath(os.path.expanduser(args.build))
+        POPUP_HTML = os.path.join(BUILD, "ui", "popup", "index.html")
     if not os.path.exists(POPUP_HTML):
-        raise SystemExit(f"no debug build at {POPUP_HTML} — run `npm run debug` first")
+        raise SystemExit(f"no debug build at {POPUP_HTML} — run `npm run debug:watch` (or `npm run debug`) first")
 
     out = os.path.abspath(os.path.expanduser(args.out))
     os.makedirs(out, exist_ok=True)
@@ -265,9 +281,20 @@ def main():
     try:
         url = f"http://127.0.0.1:{port}/ui/popup/{PREVIEW_NAME}"
         shot = os.path.join(out, f"{args.name}.png")
+        shooter = os.path.expanduser("~/bin/foxmcp.screenshot")
+        if args.serve or not os.path.exists(shooter):
+            print(f"Preview ready: {url}", flush=True)
+            print("Open it in any browser, screenshot the popup, then press Ctrl-C here "
+                  "(or kill this process: both clean up).", flush=True)
+            # a background job inherits "ignore SIGINT" from a non-interactive
+            # shell, and SIGTERM would skip the cleanup below: catch both
+            signal.signal(signal.SIGINT, lambda *_: sys.exit(0))
+            signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+            while True:
+                time.sleep(3600)
         time.sleep(0.3)
         result = subprocess.run(
-            [os.path.expanduser("~/bin/foxmcp.screenshot"), url,
+            [shooter, url,
              "--out", out, "--wait", str(args.wait), "--active"],
             check=True, capture_output=True, text=True,
         )

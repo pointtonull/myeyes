@@ -49,3 +49,7 @@ deno.json
 #-----------------------------------
 __pycache__/
 *.pyc
+
+# Local PR scratch (screenshots + PR text; see CONTRIBUTE.md)
+#-----------------------------------
+pr-assets/
