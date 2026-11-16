@@ -1,6 +1,7 @@
-import type {CustomSiteConfig, Theme, UserSettings} from '../definitions';
+import type {CustomSiteConfig, SiteFix, Theme, UserSettings} from '../definitions';
 import {ThemeEngine} from '../generators/theme-engines';
 
+import {removeSiteFixes, siteFixesFor} from './site-fixes';
 import {isURLInList, isURLMatched} from './url';
 
 /**
@@ -38,6 +39,8 @@ export const DEFAULT_THEME_NAME = 'Default';
 
 export type ThemeSettings = Pick<UserSettings, 'theme' | 'presets' | 'customThemes' | 'defaultThemeId'> & {
     siteTweaks?: CustomSiteConfig[];
+    /** AI Enhance fixes (utils/site-fixes); only Reset touches them here. */
+    siteFixes?: SiteFix[];
 };
 export type ThemePatch = Partial<ThemeSettings>;
 
@@ -253,13 +256,17 @@ export function editSiteTheme(settings: ThemeSettings, url: string, host: string
     };
 }
 
-/** Reset: a clean slate — drop the site's tweaks (parked too), its engine pick and saved theme; it follows the default. */
+/**
+ * Reset: a clean slate — drop the site's tweaks (parked too), its engine pick,
+ * saved theme and AI Enhance fixes; it follows the default.
+ */
 export function resetSite(settings: ThemeSettings, url: string): ThemePatch {
     const {presets} = withoutSite(settings, url);
     return {
         customThemes: settings.customThemes.filter((c) => c.builtIn || !isURLInList(url, c.url)),
         presets,
         siteTweaks: withoutParked(settings, url),
+        ...(settings.siteFixes ? removeSiteFixes(settings, url) : {}),
     };
 }
 
@@ -267,7 +274,8 @@ export function resetSite(settings: ThemeSettings, url: string): ThemePatch {
 export function canResetSite(settings: ThemeSettings, url: string): boolean {
     return settings.customThemes.some((c) => !c.builtIn && isURLInList(url, c.url)) ||
         settings.presets.some(({urls}) => isURLInList(url, urls)) ||
-        Boolean(findParked(settings, url));
+        Boolean(findParked(settings, url)) ||
+        siteFixesFor(settings, url).length > 0;
 }
 
 /** "Save": write the site's unsaved changes back into the theme they were forked from. */

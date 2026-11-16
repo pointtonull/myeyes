@@ -156,6 +156,8 @@ export function validateSettings(settings: Partial<UserSettings>): SettingValida
     });
 
     validateProperty(settings, 'tameImages', isBoolean, DEFAULT_SETTINGS);
+    validateProperty(settings, 'siteFixes', isArray, DEFAULT_SETTINGS);
+    validateArray(settings, 'siteFixes', (fix: any) => isPlainObject(fix) && isNonEmptyArrayOfNonEmptyStrings(fix.url) && isString(fix.css) && isString(fix.target) && isString(fix.source));
 
     validateProperty(settings, 'enabledFor', isArray, DEFAULT_SETTINGS);
     validateArray(settings, 'enabledFor', isNonEmptyString);

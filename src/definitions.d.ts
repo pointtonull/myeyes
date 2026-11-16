@@ -75,6 +75,16 @@ export interface Theme {
     immediateModify: boolean;
 }
 
+export interface SiteFix {
+    url: string[];
+    css: string;
+    /** What it fixes, e.g. "div.mw-page-container". */
+    target: string;
+    /** "community:usw-123" or "generated". */
+    source: string;
+    created: number;
+}
+
 export interface CustomSiteConfig {
     url: string[];
     theme: Theme;
@@ -109,6 +119,8 @@ export interface UserSettings {
     siteTweaks: CustomSiteConfig[];
     /** MyEyes!: invert bright diagrams / dim bright photos under the dark theme (inject/image-triage). */
     tameImages: boolean;
+    /** MyEyes!: one CSS rule per offender, found by AI Enhance (utils/site-fixes). */
+    siteFixes: SiteFix[];
     /** MyEyes!: theme for sites without one of their own — 'default' (built-in) or a preset id. */
     defaultThemeId: string;
     enabledByDefault: boolean;
