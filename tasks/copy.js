@@ -32,6 +32,13 @@ const copyEntries = [
         reloadType: reload.UI,
         platforms: [PLATFORM.CHROMIUM_MV2_PLUS, PLATFORM.CHROMIUM_MV3_PLUS],
     },
+    {
+        // MyEyes!: less.js, loaded on demand by background/less-compiler.ts. Background
+        // pages only: an MV3 service worker can't load a script after start-up.
+        path: 'vendor',
+        reloadType: reload.FULL,
+        platforms: [PLATFORM.FIREFOX_MV2, PLATFORM.FIREFOX_MV3, PLATFORM.CHROMIUM_MV2, PLATFORM.CHROMIUM_MV2_PLUS],
+    },
 ];
 
 /**

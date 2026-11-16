@@ -15,6 +15,7 @@ import {prepareStyle, rulesForURL} from '../utils/usercss';
 import {generateUID} from '../utils/uid';
 import {getURLHostOrProtocol} from '../utils/url';
 
+import {compileLess} from './less-compiler';
 import TabManager from './tab-manager';
 import {readLocalStorage, writeLocalStorage} from './utils/extension-api';
 import {logInfo, logWarn} from './utils/log';
@@ -70,6 +71,8 @@ export default class GlareFixer {
     private static pending = new Map<string, (result: any) => void>();
     private static index: IndexEntry[] | null = null;
     private static sources = new Map<number, string>();
+    /** Compiled CSS of LESS styles by id (null: failed, not retried this session). */
+    private static compiled = new Map<number, string | null>();
     private static running = false;
 
     static init(): void {
@@ -165,10 +168,27 @@ export default class GlareFixer {
             GlareFixer.sources.set(id, source);
         }
         const prepared = prepareStyle(source);
-        if (!source || prepared.unsupported || prepared.needs || prepared.code === null) {
-            return null; // less / stylus styles are skipped for now
+        if (!source || prepared.unsupported || prepared.code === null) {
+            return null; // stylus-preprocessor styles are skipped for now
         }
-        return {id: `usw-${id}`, name, weekly, rules: rulesForURL(prepared.code, url).rules};
+        let css = prepared.code;
+        if (prepared.needs === 'less') {
+            let compiled = GlareFixer.compiled.get(id);
+            if (compiled === undefined) {
+                try {
+                    compiled = await compileLess(prepared.code);
+                } catch (err) {
+                    logWarn(`AI Enhance: LESS style ${id} skipped (${String(err).slice(0, 120)})`);
+                    compiled = null;
+                }
+                GlareFixer.compiled.set(id, compiled); // failures too: tried once per session
+            }
+            if (compiled === null) {
+                return null;
+            }
+            css = compiled;
+        }
+        return {id: `usw-${id}`, name, weekly, rules: rulesForURL(css, url).rules};
     }
 
     /** Community fixes for the offender: fetch + parse the site's styles, match in the page, rank. */
