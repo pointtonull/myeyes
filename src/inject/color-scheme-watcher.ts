@@ -31,10 +31,10 @@ function sendMessage(message: MessageCStoBG): void {
          * Regular message passing errors are returned via rejected promise or runtime.lastError.
          */
         if ((error as Error).message === 'Extension context invalidated.') {
-            console.log('Dark Reader: instance of old CS detected, cleaning up.');
+            console.log('MyEyes!: instance of old CS detected, cleaning up.');
             cleanup();
         } else {
-            console.log('Dark Reader: unexpected error during message passing.');
+            console.log('MyEyes!: unexpected error during message passing.');
         }
     }
 }

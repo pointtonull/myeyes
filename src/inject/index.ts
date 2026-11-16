@@ -2,8 +2,6 @@ import type {DebugMessageBGtoCS, MessageBGtoCS, MessageCStoBG, MessageCStoUI, Me
 import {isSystemDarkModeEnabled, runColorSchemeChangeDetector, stopColorSchemeChangeDetector, emulateColorScheme} from '../utils/media-query';
 import {DebugMessageTypeBGtoCS, MessageTypeBGtoCS, MessageTypeCStoBG, MessageTypeCStoUI, MessageTypeUItoCS} from '../utils/message';
 import {generateUID} from '../utils/uid';
-import {HOMEPAGE_URL} from '../utils/links';
-import {activateTheme} from '@plus/utils/theme';
 
 import {writeEnabledForHost} from './cache';
 import {runDarkThemeDetector, stopDarkThemeDetector} from './detector';
@@ -29,8 +27,6 @@ declare const __CHROMIUM_MV2__: boolean;
 declare const __CHROMIUM_MV3__: boolean;
 declare const __THUNDERBIRD__: boolean;
 declare const __FIREFOX_MV2__: boolean;
-
-declare function cloneInto<T>(obj: T, scope: Window): T;
 
 // Identifier for this particular script instance. It is used as an alternative to chrome.runtime.MessageSender.documentId
 const scriptId = generateUID();
@@ -102,10 +98,10 @@ function sendMessage(message: MessageCStoBG | MessageCStoUI): true | undefined {
          * Regular message passing errors are returned via rejected promise or runtime.lastError.
          */
         if (error.message === 'Extension context invalidated.') {
-            console.log('Dark Reader: instance of old CS detected, cleaning up.');
+            console.log('MyEyes!: instance of old CS detected, cleaning up.');
             cleanup();
         } else {
-            console.log('Dark Reader: unexpected error during message passing.');
+            console.log('MyEyes!: unexpected error during message passing.');
         }
     }
 }
@@ -305,17 +301,6 @@ if (!__THUNDERBIRD__) {
     addEventListener('pagehide', onPageHide, {passive: true});
     addEventListener('freeze', onFreeze, {passive: true});
     addEventListener('resume', onResume, {passive: true});
-}
-
-if (location.origin === HOMEPAGE_URL) {
-    document.addEventListener('__darkreader_activate__', async (e) => {
-        const {email, key} = (e as CustomEvent).detail;
-        const result = await activateTheme(email, key);
-        const detail = {result};
-        document.dispatchEvent(new CustomEvent('__darkreader_activationResult__', {
-            detail: __FIREFOX_MV2__ && typeof cloneInto === 'function' ? cloneInto(detail, window) : detail,
-        }));
-    }, {once: true});
 }
 
 if (__TEST__) {
