@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>MyEyes!</title>
+<meta name="description" content="MyEyes! is a dark-mode browser extension for Firefox, built for eyes that need a break.">
+<style>
+    /* Dark on purpose, in every browser setting: this page is for people whose eyes hurt. */
+    :root { color-scheme: dark; }
+    html { background: #14161a; }
+    body {
+        margin: 0 auto;
+        padding: 3rem 1rem 4rem;
+        max-width: 38rem;
+        background: #14161a;
+        color: #c9ccd1;
+        font: 1.0625rem/1.65 system-ui, sans-serif;
+    }
+    h1 { margin: 0 0 .25rem; font-size: 2rem; color: #dfe2e6; }
+    h2 { margin: 2.25rem 0 .5rem; font-size: 1.15rem; color: #dfe2e6; }
+    p, ol, ul { margin: .5rem 0; }
+    a { color: #8ab4f8; }
+    a:hover, a:focus { color: #b3cdfb; }
+    .lead { margin-top: 0; color: #a6abb3; }
+    .button {
+        display: inline-block;
+        margin: .75rem 0 .25rem;
+        padding: .6rem 1.1rem;
+        border-radius: .4rem;
+        background: #2a3a55;
+        color: #dfe2e6;
+        text-decoration: none;
+    }
+    .button:hover, .button:focus { background: #34476a; color: #fff; }
+    footer { margin-top: 3rem; font-size: .9rem; color: #8b9098; }
+</style>
+</head>
+<body>
+<main>
+    <h1>MyEyes!</h1>
+    <p class="lead">A dark mode for the web, built for eyes that need a break. Pages are dark from the first frame, and everything works from the keyboard.</p>
+
+    <a class="button" href="https://github.com/pointtonull/myeyes/releases/latest">Get the latest release</a>
+
+    <h2>Install (Firefox 140 or newer)</h2>
+    <ol>
+        <li>Download the <code>.xpi</code> file from the latest release.</li>
+        <li>In Firefox open <code>about:addons</code>, click the gear and choose <em>Install Add-on From File…</em>.</li>
+    </ol>
+    <p>The file is signed by Mozilla, so it stays installed. From version 0.1.1 on, Firefox updates it by itself.</p>
+
+    <h2>Your data</h2>
+    <p>MyEyes! collects nothing: no accounts, no analytics, no telemetry. Read the <a href="https://github.com/pointtonull/myeyes/blob/main/PRIVACY.md">privacy policy</a>.</p>
+
+    <h2>More</h2>
+    <ul>
+        <li><a href="https://github.com/pointtonull/myeyes#readme">Help and documentation</a></li>
+        <li><a href="https://github.com/pointtonull/myeyes">Source code</a></li>
+        <li><a href="https://github.com/pointtonull/myeyes/issues">Report a problem</a></li>
+    </ul>
+
+    <footer>MyEyes! is a fork of <a href="https://github.com/darkreader/darkreader">Dark Reader</a> (MIT license). It is not affiliated with Dark Reader Ltd.</footer>
+</main>
+</body>
+</html>
