@@ -159,7 +159,7 @@ function AiActions(props: ViewProps) {
         <div class="me-ai">
             <button
                 class={{'me-ai__btn': true, 'me-ai__btn--enhance': true, 'me-ai__btn--busy': Boolean(store.busy)}}
-                title={`Find the brightest thing left on this page and fix it: community styles first, checked with a screenshot${hint}`}
+                title={`Sets this site to Enabled, then finds the brightest thing left on the page and fixes it: community styles first, checked with a screenshot${hint}`}
                 onclick={enhance}
             >
                 <span class="me-ai__icon"><KitIcon name="ai-enhance" /></span>{store.busy ? 'Enhancing…' : 'AI Enhance'}

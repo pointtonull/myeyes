@@ -18,7 +18,7 @@ import {isInTimeIntervalLocal, nextTimeInterval, isNightAtLocation, nextTimeChan
 import {nextDefaultTheme, nextSiteTheme, resolveSiteTheme} from '../utils/named-themes';
 import type {OSDMessage} from '../utils/osd-message';
 import {defaultThemeOSD, extensionToggleOSD, pdfToggleOSD, siteEnableOSD, siteThemeOSD} from '../utils/osd-message';
-import {getSiteEnableMode, isSiteDarkened, toggleSiteEnable} from '../utils/site-enable';
+import {getSiteEnableMode, isSiteDarkened, setSiteEnableMode, toggleSiteEnable} from '../utils/site-enable';
 import {siteFixCSS} from '../utils/site-fixes';
 import {isURLInList, getURLHostOrProtocol, isURLEnabled, isPDF} from '../utils/url';
 
@@ -36,6 +36,9 @@ import {getCommands, canInjectScript, writeLocalStorage, removeLocalStorage} fro
 import {logInfo, logWarn} from './utils/log';
 import {setWindowTheme, resetWindowTheme} from './window-theme';
 
+
+// MyEyes!: AI Enhance on a page that wasn't darkened waits this long for the theme to paint
+const ENHANCE_THEME_SETTLE_MS = 1500;
 
 type AutomationState = 'turn-on' | 'turn-off' | 'scheme-dark' | 'scheme-light' | '';
 
@@ -322,14 +325,26 @@ export class Extension {
                 IconManager.flashBadge(tabId, '!');
             }
         };
-        if (!info.url || !isURLEnabled(info.url, UserStorage.settings, info)) {
-            // fixes ride on the dynamic theme, so it has to be running here; say how to get there
-            const host = info.url ? getURLHostOrProtocol(info.url) : undefined;
-            const mode = info.url ? getSiteEnableMode(UserStorage.settings, info.url) : 'disabled';
-            const note = !UserStorage.settings.enabled ? 'MyEyes is off: turn it on first'
-                : mode === 'disabled' ? 'MyEyes is off for this site: set it to Auto or Enabled'
-                    : 'This page is already dark: set it to Enabled to fix what is left';
-            osd(tab.id, {title: 'AI Enhance', host, note, icon: 'disabled'});
+        if (!info.url) {
+            return;
+        }
+        const host = getURLHostOrProtocol(info.url);
+        if (!UserStorage.settings.enabled) {
+            osd(tab.id, {title: 'AI Enhance', host, note: 'MyEyes is off: turn it on first', icon: 'disabled'});
+            return;
+        }
+        // Enhancing a site means wanting it darkened: move it to Enabled (darken even if
+        // already dark), and give the theme a moment to paint before the first screenshot.
+        if (getSiteEnableMode(UserStorage.settings, info.url) !== 'enabled') {
+            const wasDarkened = isURLEnabled(info.url, UserStorage.settings, info);
+            await Extension.changeSettings(setSiteEnableMode(UserStorage.settings, info.url, host, 'enabled'), true);
+            if (!wasDarkened) {
+                await new Promise((resolve) => setTimeout(resolve, ENHANCE_THEME_SETTLE_MS));
+            }
+        }
+        if (!isURLEnabled(info.url, UserStorage.settings, info)) {
+            // still not darkened: protected page, PDFs switched off, file access…
+            osd(tab.id, {title: 'AI Enhance', host, note: 'MyEyes can\'t darken this page', icon: 'disabled'});
             return;
         }
         await GlareFixer.enhance(tab, info.url, {
