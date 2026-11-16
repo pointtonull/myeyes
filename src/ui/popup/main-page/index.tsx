@@ -132,12 +132,17 @@ function Sliders(props: {theme: any; change: (t: any) => void}) {
     );
 }
 
-function AiActions() {
-    // Net-new local-model features — stubs until built: aria-disabled rather
-    // than disabled, so they keep the mockup's look (no dimming) yet do nothing.
+function AiActions(props: ViewProps) {
+    // AI Enhance: find the brightest thing left on this page and fix it
+    // (background/glare-fixer; progress and result show on the page's OSD).
+    // Clean Up is still a stub: aria-disabled keeps the mockup's look yet does nothing.
     return (
         <div class="me-ai">
-            <button class="me-ai__btn me-ai__btn--enhance" aria-disabled="true" title="AI Enhance: coming soon (on-device)">
+            <button
+                class="me-ai__btn me-ai__btn--enhance"
+                title="AI Enhance: find the brightest thing left on this page and fix it (community styles first, verified by a screenshot)"
+                onclick={() => props.actions.enhanceSite()}
+            >
                 <span class="me-ai__icon"><KitIcon name="ai-enhance" /></span>AI Enhance
             </button>
             <button class="me-ai__btn me-ai__btn--clean" aria-disabled="true" title="Clean Up: coming soon (on-device)">
@@ -174,7 +179,7 @@ export default function MainPage(props: MainPageProps) {
                 <ResetButton {...props} />
             </section>
             <section class="m-section me-ai-section">
-                <AiActions />
+                <AiActions {...props} />
             </section>
             <section class="m-section me-footer">
                 <DefaultMenu {...props} />

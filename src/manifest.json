@@ -59,6 +59,12 @@
             },
             "description": "__MSG_cycle_site_theme__"
         },
+        "enhanceSite": {
+            "suggested_key": {
+                "default": "Alt+Shift+E"
+            },
+            "description": "__MSG_enhance_site__"
+        },
         "toggle": {
             "description": "__MSG_toggle_extension__"
         },

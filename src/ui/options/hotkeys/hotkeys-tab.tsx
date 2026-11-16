@@ -10,6 +10,7 @@ import {ControlGroup, Shortcut} from '../../controls';
 const HOTKEYS: Array<{command: Command; description: string}> = [
     {command: 'addSite', description: 'Toggle the current website (on / off, back to Auto)'},
     {command: 'cycleSiteTheme', description: 'Next theme for the current website'},
+    {command: 'enhanceSite', description: 'AI Enhance: fix the brightest thing left on this page'},
     {command: 'toggle', description: 'Enable/disable the extension on all sites'},
     {command: 'cycleDefaultTheme', description: 'Next default theme for new sites'},
 ];

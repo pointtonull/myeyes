@@ -103,6 +103,7 @@ test('Settings Validation', () => {
             {url: ['a.com']},
         ],
         tameImages: 'yes',
+        siteFixes: [{url: ['a.com'], css: '.x{}', target: 'div.x', source: 'generated', created: 1}, {url: [], css: 1}],
         disabledFor: ['a.com', '', 'b.com'],
         enabledFor: {0: 'a.com', 1: 'b.com'},
         enabledByDefault: true,
@@ -140,6 +141,7 @@ test('Settings Validation', () => {
             {id: 'p5', name: 'P5', urls: ['a.com'], theme: {brightness: 100}},
         ],
         customThemes: [{url: ['a.com'], theme: {brightness: 100}}],
+        siteFixes: [{url: ['a.com'], css: '.x{}', target: 'div.x', source: 'generated', created: 1}],
     });
 
     const nullishSet = {
@@ -196,6 +198,7 @@ test('Settings Validation', () => {
             {url: ['a.com'], baseId: 'p5', theme: {brightness: 90} as Theme},
         ],
         tameImages: false,
+        siteFixes: [{url: ['a.com'], css: '.x { background-color: #111 !important; }', target: 'div.x', source: 'generated', created: 1}],
         disabledFor: ['a.com', 'b.com'],
         enabledFor: ['c.com'],
         enabledByDefault: false,

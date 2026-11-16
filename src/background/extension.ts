@@ -2,6 +2,7 @@ import type {ExtensionData, Theme, Shortcuts, UserSettings, TabInfo, TabData, Co
 import createCSSFilterStylesheet from '../generators/css-filter';
 import {getDetectorHintsFor} from '../generators/detector-hints';
 import {getDynamicThemeFixesFor} from '../generators/dynamic-theme';
+import {findRelevantFix} from '../inject/dynamic-theme/fixes';
 import createStaticStylesheet from '../generators/static-theme';
 import {createSVGFilterStylesheet, getSVGFilterMatrixValue, getSVGReverseFilterMatrixValue} from '../generators/svg-filter';
 import {ThemeEngine} from '../generators/theme-engines';
@@ -425,6 +426,11 @@ export class Extension {
                 Extension.changeSettings(patch);
                 break;
             }
+            case 'enhanceSite':
+                // the pipeline reports its own progress on the OSD
+                logInfo('AI Enhance command entered');
+                await Extension.enhanceActiveTab();
+                break;
         }
     };
 
@@ -867,12 +873,18 @@ export class Extension {
                     // MyEyes!: AI Enhance fixes for this site (top frame: their paths come from it)
                     const siteCSS = isTopFrame ? siteFixCSS(settings, tabURL) : '';
                     if (siteCSS) {
-                        fixes = {
-                            url: [getURLHostOrProtocol(tabURL)], invert: [], css: '', ignoreInlineStyle: [], ignoreImageAnalysis: [],
-                            ignoreCSSUrl: [], disableStyleSheetsProxy: false, disableCustomElementRegistryProxy: false,
-                            ...fixes,
-                        };
-                        fixes.css = fixes.css ? `${fixes.css}\n${siteCSS}` : siteCSS;
+                        // the engine combines the generic fix with ONE site fix (findRelevantFix): merge
+                        // into that one so upstream's own fix for the site keeps applying
+                        const blank = (u: string) => ({url: [u], invert: [], css: '', ignoreInlineStyle: [], ignoreImageAnalysis: [],
+                            ignoreCSSUrl: [], disableStyleSheetsProxy: false, disableCustomElementRegistryProxy: false});
+                        const list = fixes && fixes.length && fixes[0].url[0] === '*' ? fixes.slice() : [blank('*')];
+                        const relevant = findRelevantFix(url, list);
+                        if (relevant) {
+                            list[relevant] = {...list[relevant], css: `${list[relevant].css || ''}\n${siteCSS}`};
+                        } else {
+                            list.push({...blank(getURLHostOrProtocol(tabURL)), css: siteCSS});
+                        }
+                        fixes = list;
                     }
                     return {
                         type: MessageTypeBGtoCS.ADD_DYNAMIC_THEME,
