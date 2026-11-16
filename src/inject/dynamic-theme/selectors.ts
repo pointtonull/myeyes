@@ -4,6 +4,8 @@ export type FilterSelectorsCollection = {
     invert: Set<string>;
     dim: Set<string>;
     none: Set<string>;
+    /** MyEyes!: large light background images kept under a dark overlay (shown on hover). */
+    overlay: Set<string>;
 };
 
 export const mediaFilterSelectors = new Map<string, FilterSelectorsCollection>();
@@ -18,6 +20,7 @@ export function addFilterSelector(selector: string, type: keyof FilterSelectorsC
             invert: new Set(),
             dim: new Set(),
             none: new Set(),
+            overlay: new Set(),
         };
         mediaFilterSelectors.set(media, filterSelectors);
     }

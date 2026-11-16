@@ -277,7 +277,7 @@ export function createFallbackFactory(fn: (colors: typeof colorModifiers) => Fal
     fallbackFactory = fn(colorModifiers);
 }
 
-export type FilterType = 'invert' | 'dim' | 'none';
+export type FilterType = 'invert' | 'dim' | 'none' | 'overlay';
 
 let addFilterSelector: ((selector: string, type: FilterType, media: string) => void) | null = null;
 
@@ -594,8 +594,17 @@ export function getBgImageModifier(
             let result: string | null = null;
             const logSrc = imageDetails.src.startsWith('data:') ? 'data:' : imageDetails.src;
             if (isLarge && isLight && !isTransparent && theme.mode === 1) {
-                logInfo(`Hiding large light image ${logSrc}`);
-                result = 'none';
+                // MyEyes!: upstream hid these ('none') — glare-safe, but the content is gone
+                // (banners, hero photos, albums). Keep the image under a dark overlay instead
+                // (index.ts overlay rules), shown again on hover (inject/hover-reveal). Without a
+                // selector (inline style) there is nothing to overlay: hide it as upstream did.
+                if (pushFilter) {
+                    logInfo(`Overlaying large light image ${logSrc}`);
+                    pushFilter('overlay');
+                } else {
+                    logInfo(`Hiding large light image ${logSrc}`);
+                    result = 'none';
+                }
             } else if (isDark && isTransparent && theme.mode === 1 && width > 2) {
                 logInfo(`Inverting dark image ${logSrc}`);
                 if (canFilterImage(imageDetails.src)) {

@@ -28,6 +28,7 @@ import {manageStyle, getManageableStyles, cleanLoadingLinks, setIgnoredCSSURLs} 
 import {injectProxy} from './stylesheet-proxy';
 import {variablesStore} from './variables';
 import {watchForStyleChanges, stopWatchingForStyleChanges} from './watch';
+import {overlayCSS} from '../../utils/image-triage';
 
 export {createFallbackFactory} from './modify-css';
 
@@ -226,6 +227,10 @@ function getInversionStyleValue(): string {
         }
         if (filterSelectors && filterSelectors.dim.size > 0) {
             buildDimRules(group, filterSelectors, theme!);
+        }
+        // MyEyes!: large light background images under a dark overlay (utils/image-triage)
+        if (filterSelectors && filterSelectors.overlay.size > 0) {
+            group.push(overlayCSS([...filterSelectors.overlay]));
         }
         return group;
     };

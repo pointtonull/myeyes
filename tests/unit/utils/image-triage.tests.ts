@@ -1,4 +1,15 @@
-import {IMAGE_ATTR, imageStats, shouldDimWhilePending, triageCSS, triageImage} from '../../../src/utils/image-triage';
+import {
+    IMAGE_ATTR,
+    OVERLAY_SHADOW,
+    REVEAL_ATTR,
+    elementSelector,
+    imageStats,
+    overlayCSS,
+    revealSelector,
+    shouldDimWhilePending,
+    triageCSS,
+    triageImage,
+} from '../../../src/utils/image-triage';
 
 const N = 64;
 type Px = [number, number, number, number];
@@ -74,6 +85,31 @@ describe('triage', () => {
     it('dims only large images while they are being analysed', () => {
         expect(shouldDimWhilePending(BIG)).toBe(true);
         expect(shouldDimWhilePending({width: 100, height: 100})).toBe(false);
+    });
+});
+
+describe('large light background images: overlay + hover reveal', () => {
+    it('reveal and element selectors keep pseudo-elements in the right place', () => {
+        expect(revealSelector('.hero')).toBe(`.hero[${REVEAL_ATTR}]`);
+        expect(revealSelector(' .hero::before ')).toBe(`.hero[${REVEAL_ATTR}]::before`);
+        expect(revealSelector('.card:after')).toBe(`.card[${REVEAL_ATTR}]:after`);
+        expect(elementSelector('.hero::before')).toBe('.hero');
+        expect(elementSelector('.album .tile')).toBe('.album .tile');
+    });
+
+    it('overlays with an inset shadow (text stays crisp), lifts it while revealed, no motion when reduced', () => {
+        const css = overlayCSS(['.hero', '.tile::before']);
+        expect(css).toContain('.hero, .tile::before {');
+        expect(css).toContain(`box-shadow: ${OVERLAY_SHADOW} !important;`);
+        expect(css).toContain(`.hero[${REVEAL_ATTR}], .tile[${REVEAL_ATTR}]::before {`);
+        expect(css).toContain('@media (prefers-reduced-motion: reduce)');
+        expect(overlayCSS([])).toBe('');
+    });
+
+    it('dimmed photos are revealed, inverted diagrams are not', () => {
+        const css = triageCSS('dynamic');
+        expect(css).toContain(`img[${IMAGE_ATTR}="dim"][${REVEAL_ATTR}] { filter: none !important; }`);
+        expect(css).not.toContain(`img[${IMAGE_ATTR}="invert"][${REVEAL_ATTR}]`);
     });
 });
 

@@ -183,6 +183,11 @@ function onMutations(records: MutationRecord[]) {
             consider(img);
             continue;
         }
+        // the dynamic theme's teardown sweeps every .darkreader node, ours included: while
+        // triage is on, put the sheet back (else dimmed photos would show at full brightness)
+        if (active && style && !style.isConnected && [...record.removedNodes].includes(style)) {
+            ensureStyle();
+        }
         record.addedNodes.forEach((node) => {
             if (node instanceof HTMLImageElement) {
                 consider(node);

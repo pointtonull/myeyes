@@ -9,6 +9,7 @@ import {writeEnabledForHost} from './cache';
 import {runDarkThemeDetector, stopDarkThemeDetector} from './detector';
 import {createOrUpdateDynamicTheme, removeDynamicTheme, cleanDynamicThemeCache} from './dynamic-theme';
 import {collectCSS} from './dynamic-theme/css-collection';
+import {runHoverReveal, stopHoverReveal} from './hover-reveal';
 import {runImageTriage, stopImageTriage} from './image-triage';
 import {handleOffenderRequest} from './offender';
 import {removeSiteFixes, updateSiteFixes} from './site-fixes';
@@ -48,6 +49,7 @@ function cleanup() {
     removeEventListener('resume', onResume);
     cleanDynamicThemeCache();
     stopImageTriage();
+    stopHoverReveal();
     removeSiteFixes();
     stopDarkThemeDetector();
     stopColorSchemeChangeDetector();
@@ -55,6 +57,7 @@ function cleanup() {
 
 // MyEyes!: images stay bright under every engine; triage inverts diagrams and dims bright photos
 function updateImageTriage(enabled: boolean | undefined, engine: 'dynamic' | 'filter') {
+    runHoverReveal(); // photos and overlaid backgrounds are shown as they are under a resting pointer
     if (enabled === false) {
         stopImageTriage();
     } else {
@@ -138,6 +141,7 @@ function onMessage(message: MessageBGtoCS | MessageUItoCS | DebugMessageBGtoCS) 
                     if (hasDarkTheme) {
                         removeStyle();
                         stopImageTriage();
+                        stopHoverReveal();
                         onDarkThemeDetected();
                     }
                 }, detectorHints);
@@ -158,6 +162,7 @@ function onMessage(message: MessageBGtoCS | MessageUItoCS | DebugMessageBGtoCS) 
                         removeStyle();
                         removeSVGFilter();
                         stopImageTriage();
+                        stopHoverReveal();
                         onDarkThemeDetected();
                     }
                 }, detectorHints);
@@ -176,6 +181,7 @@ function onMessage(message: MessageBGtoCS | MessageUItoCS | DebugMessageBGtoCS) 
                     if (hasDarkTheme) {
                         removeDynamicTheme();
                         stopImageTriage();
+                        stopHoverReveal();
                         onDarkThemeDetected();
                     }
                 }, detectorHints);
@@ -210,6 +216,7 @@ function onMessage(message: MessageBGtoCS | MessageUItoCS | DebugMessageBGtoCS) 
             removeSVGFilter();
             removeDynamicTheme();
             stopImageTriage();
+            stopHoverReveal();
             // MyEyes!: a page left alone because it is already dark still gets its AI Enhance fixes
             updateSiteFixes(message.data?.siteFixes);
             stopDarkThemeDetector();

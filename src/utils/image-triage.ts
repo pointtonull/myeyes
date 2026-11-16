@@ -122,6 +122,56 @@ export function triageImage(stats: ImageStats, size: {width: number; height: num
     return {treatment: 'none', reason: 'ok'};
 }
 
+// --- large light background images: a dark overlay, shown again on hover ----
+
+/** Set (by inject/hover-reveal) on the element the pointer rests on, to show its image as it is. */
+export const REVEAL_ATTR = 'data-myeyes-reveal';
+
+/**
+ * An inset shadow paints over an element's background but under its content,
+ * so it darkens a background image while text on top stays crisp — unlike a
+ * filter, which would dim the text too.
+ */
+export const OVERLAY_SHADOW = 'inset 0 0 0 100vmax rgba(0, 0, 0, 0.6)';
+
+const PSEUDO_ELEMENT_END = /(::?(?:before|after))$/i;
+
+/** `.hero` → `.hero[data-myeyes-reveal]`; `.hero::before` → `.hero[data-myeyes-reveal]::before`. */
+export function revealSelector(selector: string): string {
+    const s = selector.trim();
+    const m = PSEUDO_ELEMENT_END.exec(s);
+    return m ? `${s.slice(0, -m[1].length)}[${REVEAL_ATTR}]${m[1]}` : `${s}[${REVEAL_ATTR}]`;
+}
+
+/** The element a selector styles (pseudo-element part dropped), to find overlay targets in the DOM. */
+export function elementSelector(selector: string): string {
+    return selector.trim().replace(PSEUDO_ELEMENT_END, '');
+}
+
+/**
+ * Rules for the dynamic theme's large light background images (they used to be
+ * hidden): overlay them, show them again while revealed, gentle transition
+ * unless the user prefers reduced motion.
+ */
+export function overlayCSS(selectors: string[]): string {
+    if (!selectors.length) {
+        return '';
+    }
+    const list = selectors.join(', ');
+    return [
+        `${list} {`,
+        `    box-shadow: ${OVERLAY_SHADOW} !important;`,
+        '    transition: box-shadow 200ms ease !important;',
+        '}',
+        `${selectors.map(revealSelector).join(', ')} {`,
+        '    box-shadow: none !important;',
+        '}',
+        '@media (prefers-reduced-motion: reduce) {',
+        `    ${list} { transition: none !important; }`,
+        '}',
+    ].join('\n');
+}
+
 /** Decide quickly whether a not-yet-analysed image is large enough to be dimmed while pending. */
 export function shouldDimWhilePending(size: {width: number; height: number}): boolean {
     return size.width * size.height >= 160 * 120;
@@ -141,6 +191,9 @@ export function triageCSS(engine: 'dynamic' | 'filter'): string {
     return [
         `${sel('invert')} { filter: invert(90%) hue-rotate(180deg) !important; }`,
         `${sel('dim')} { filter: brightness(75%) !important; }`,
+        // a dimmed photo is shown as it is while the pointer rests on it (inject/hover-reveal);
+        // inverted diagrams are not: revealing them would flash white
+        `${sel('dim')}[${REVEAL_ATTR}] { filter: none !important; }`,
         `${sel('pending')} { filter: brightness(60%) !important; }`,
         `@media (prefers-reduced-motion: no-preference) { img[${IMAGE_ATTR}] { transition: filter 150ms ease-out; } }`,
         '',
