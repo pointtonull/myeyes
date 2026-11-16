@@ -1,11 +1,11 @@
 # Security Policy
 
-Any security vulnerability discovered in Dark Reader will be fixed as soon as possible with as minimal impact as possible when reported.
+Any security vulnerability discovered in MyEyes! will be fixed as soon as possible, with as little impact as possible, once it is reported.
 
-Please ensure you are always running the [latest version available](https://github.com/darkreader/darkreader/releases).
+Please make sure you are running the [latest release](https://github.com/pointtonull/myeyes/releases/latest). Firefox updates MyEyes! by itself from version 0.1.1 on; older installs have to be updated by hand.
 
-Some web browser extension stores may have an older version currently published.
+## Reporting a vulnerability
 
-## Security Vulnerability Report
+If you have discovered a security vulnerability, please report it privately with GitHub's [private vulnerability reporting](https://github.com/pointtonull/myeyes/security/advisories/new) instead of opening a public issue.
 
-If you have discovered a security vulnerability, please email us at <darkreaderapp@gmail.com> immediately.
+MyEyes! is built on the Dark Reader engine. If the problem is in code that both extensions share, report it here as well, and we will coordinate with the [Dark Reader](https://github.com/darkreader/darkreader) maintainers.

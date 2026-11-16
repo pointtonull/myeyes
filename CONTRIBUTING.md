@@ -1,22 +1,18 @@
 <h2 align="center">Contributions</h2>
 
-<p align="center">You can contribute to and help Dark Reader in many ways. Continue reading to learn how, and thank you in advance!</p>
+<p align="center">Start with <a href="CONTRIBUTE.md">CONTRIBUTE.md</a>: it is MyEyes!'s own guide to contributing.</p>
 
-## Sponsor
-
-<a href="https://opencollective.com/darkreader/donate" target="_blank" rel="noreferrer noopener"> <img src="https://opencollective.com/darkreader/donate/button@2x.png?color=blue" width=300 /></a>
-
-Please sponsor the development of Dark Reader.
+This page is inherited from Dark Reader and still describes the parts of the engine that MyEyes! shares with it: how a website can opt out, and how to write per-site fixes. MyEyes! reads Dark Reader's community fixes at runtime, so a fix proposed to [Dark Reader](https://github.com/darkreader/darkreader) reaches MyEyes! users too, and the links below that point at `darkreader/darkreader` are meant that way.
 
 ## Translation
 
-[Improve or suggest](https://github.com/darkreader/darkreader/tree/main/src/_locales) a translation. See the list of [language codes](https://developer.chrome.com/webstore/i18n#localeTable) that we can support.
+The locale files live in [src/_locales](https://github.com/pointtonull/myeyes/tree/main/src/_locales), and `python3 tools/sync_locales.py` keeps them in step with `en.config`. See the list of [language codes](https://developer.chrome.com/webstore/i18n#localeTable) that we can support.
 
-## Disabling Dark Reader on your site
+## Disabling MyEyes! on your site
 
-Website pages can request Dark Reader to disable itself by embedding a "Dark Reader lock". The "lock" is a `<meta>` tag with `name` attribute set to `darkreader-lock` which is a child of `<head>` tag in the document.
+Website pages can request MyEyes! (and Dark Reader) to disable themselves by embedding a "Dark Reader lock". The "lock" is a `<meta>` tag with `name` attribute set to `darkreader-lock` which is a child of `<head>` tag in the document.
 
-### Disabling Dark Reader statically
+### Disabling the extension statically
 
 Add `<meta name="darkreader-lock">` within your HTML document in `<head>` like so:
 ```html
@@ -25,7 +21,7 @@ Add `<meta name="darkreader-lock">` within your HTML document in `<head>` like s
 </head>
 ```
 
-### Disabling Dark Reader dynamically
+### Disabling the extension dynamically
 
 Add the "lock" dynamically like so (assuming browser already parsed enough of the document to create a `head` attribute):
 ```js
