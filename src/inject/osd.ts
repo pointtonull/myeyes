@@ -1,6 +1,7 @@
 /**
  * MyEyes! on-screen confirmation for keyboard commands, after
- * brand/reference/osd-mockup.png: a neon-glass pill in the top-right corner
+ * brand/reference/osd-mockup.png: a neon-glass pill in the top-left corner
+ * (the mockup had top-right, but the toolbar popup opens there and covers it)
  * with the mascot, a divider, "[icon] Filter+ · example.com" over a muted
  * note, and a ring that drains until the pill fades out by itself. What it
  * says comes from the background (utils/osd-message); this only draws it.
@@ -185,8 +186,9 @@ function create() {
     css(host, {
         'all': 'initial',
         'position': 'fixed',
+        // top-LEFT: the toolbar popup opens top-right and would cover it
         'top': '18px',
-        'right': '18px',
+        'left': '18px',
         'z-index': '2147483647',
         'pointer-events': 'none',
         'display': 'block',
