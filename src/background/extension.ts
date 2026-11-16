@@ -485,7 +485,7 @@ export class Extension {
             Extension.registeredContextMenus = false;
             chrome.contextMenus.create({
                 id: 'DarkReader-top',
-                title: 'Dark Reader',
+                title: 'MyEyes!',
             }, () => {
                 if (chrome.runtime.lastError) {
                     // Failed to create the context menu

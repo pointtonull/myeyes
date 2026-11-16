@@ -1,7 +1,7 @@
 import {m} from 'malevic';
 import {getContext} from 'malevic/dom';
 
-import {DEVTOOLS_DOCS_URL} from '../../../utils/links';
+import {DEVTOOLS_DOCS_URL, ISSUES_URL} from '../../../utils/links';
 import {isFirefox} from '../../../utils/platform';
 import {Button, MessageBox} from '../../controls';
 
@@ -123,8 +123,8 @@ export function ConfigEditor(props: ConfigEditorProps): Malevic.Child {
             </div>
             <p class="description">
                 Read about this tool <strong><a href={DEVTOOLS_DOCS_URL} target="_blank" rel="noopener noreferrer">here</a></strong>.
-                If a <strong>popular</strong> website looks incorrect
-                e-mail to <strong>support@darkreader.org</strong>
+                If a <strong>popular</strong> website looks incorrect,
+                please <strong><a href={ISSUES_URL} target="_blank" rel="noopener noreferrer">open an issue</a></strong>.
             </p>
             {dialog}
         </div>

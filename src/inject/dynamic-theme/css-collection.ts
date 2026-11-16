@@ -1,5 +1,6 @@
 import {forEach} from '../../utils/array';
 import {formatCSS} from '../../utils/css-text/format-css';
+import {SITE_URL} from '../../utils/links';
 import {loadAsDataURL} from '../../utils/network';
 import {getMatches} from '../../utils/text';
 
@@ -16,27 +17,11 @@ async function replaceBlobs(text: string) {
 }
 
 const banner = `/*
-                        _______
-                       /       \\
-                      .==.    .==.
-                     ((  ))==((  ))
-                    / "=="    "=="\\
-                   /____|| || ||___\\
-       ________     ____    ________  ___    ___
-       |  ___  \\   /    \\   |  ___  \\ |  |  /  /
-       |  |  \\  \\ /  /\\  \\  |  |  \\  \\|  |_/  /
-       |  |   )  /  /__\\  \\ |  |__/  /|  ___  \\
-       |  |__/  /  ______  \\|  ____  \\|  |  \\  \\
-_______|_______/__/ ____ \\__\\__|___\\__\\__|___\\__\\____
-|  ___  \\ |  ____/ /    \\   |  ___  \\ |  ____|  ___  \\
-|  |  \\  \\|  |___ /  /\\  \\  |  |  \\  \\|  |___|  |  \\  \\
-|  |__/  /|  ____/  /__\\  \\ |  |   )  |  ____|  |__/  /
-|  ____  \\|  |__/  ______  \\|  |__/  /|  |___|  ____  \\
-|__|   \\__\\____/__/      \\__\\_______/ |______|__|   \\__\\
-                https://darkreader.org
-*/
+ * MyEyes! generated CSS
+ * ${SITE_URL}
+ */
 
-/*! Dark reader generated CSS | Licensed under MIT https://github.com/darkreader/darkreader/blob/main/LICENSE */
+/*! MyEyes! generated CSS, based on Dark Reader | Licensed under MIT https://github.com/darkreader/darkreader/blob/main/LICENSE */
 `;
 
 export async function collectCSS(): Promise<string> {
