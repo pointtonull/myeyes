@@ -4,64 +4,145 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>MyEyes!</title>
+<meta name="theme-color" content="#15152f">
+<title>MyEyes! — dark mode for eyes that need a break</title>
 <meta name="description" content="MyEyes! is a dark-mode browser extension for Firefox, built for eyes that need a break.">
+<link rel="canonical" href="https://www.pointtonull.dev/myeyes/">
+<link rel="icon" type="image/svg+xml" href="assets/mark.svg">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/mark-64.png">
+<link rel="preload" href="assets/fonts/OpenSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/OpenSans-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MyEyes!">
+<meta property="og:title" content="MyEyes! — dark mode for eyes that need a break">
+<meta property="og:description" content="A dark mode for the web, built for eyes that need a break. Pages are dark from the first frame, and everything works from the keyboard.">
+<meta property="og:url" content="https://www.pointtonull.dev/myeyes/">
+<meta property="og:image" content="https://www.pointtonull.dev/myeyes/assets/social-preview.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The MyEyes! mascot, a purple blob, squinting at a bright laptop, then smiling in glasses at a dark one, beside the MyEyes! name.">
+<meta name="twitter:card" content="summary_large_image">
+
 <style>
-    /* Dark on purpose, in every browser setting: this page is for people whose eyes hurt. */
-    :root { color-scheme: dark; }
-    html { background: #14161a; }
+    /* Dark on purpose, in every browser setting: this page is for people whose eyes hurt.
+       Colours are the MyEyes! palette (brand/ui-kit/palette.json); the type is Open Sans,
+       the extension's own typeface, served from this site. Nothing moves, nothing is
+       translucent, nothing loads from anywhere else. */
+    @font-face {
+        font-family: "Open Sans";
+        font-weight: 400;
+        font-display: swap;
+        src: url("assets/fonts/OpenSans-Regular.woff2") format("woff2");
+    }
+    @font-face {
+        font-family: "Open Sans";
+        font-weight: 600;
+        font-display: swap;
+        src: url("assets/fonts/OpenSans-SemiBold.woff2") format("woff2");
+    }
+    :root {
+        color-scheme: dark;
+        --bg: #15152f;
+        --surface: #26234d;
+        --surface-hi: #2f2b5e;
+        --border: #6549a7;
+        --purple: #9860f5;
+        --cyan: #46e0f5;
+        --pink: #ef55ed;
+        --text: #f6f2ff;
+        --muted: #c8bce5;
+        --gold: #ffd27b;
+        --gradient: linear-gradient(90deg, var(--cyan), var(--pink));
+        --font: "Open Sans", system-ui, "Segoe UI", "Helvetica Neue", Ubuntu, sans-serif;
+    }
+    html { background: var(--bg); }
     body {
-        margin: 0 auto;
-        padding: 3rem 1rem 4rem;
-        max-width: 38rem;
-        background: #14161a;
-        color: #c9ccd1;
-        font: 1.0625rem/1.65 system-ui, sans-serif;
+        margin: 0;
+        background: var(--bg) radial-gradient(48rem 26rem at 78% 0, #2a2160 0, transparent 70%) no-repeat;
+        color: var(--muted);
+        font: 400 1.0625rem/1.65 var(--font);
     }
-    h1 { margin: 0 0 .25rem; font-size: 2rem; color: #dfe2e6; }
-    h2 { margin: 2.25rem 0 .5rem; font-size: 1.15rem; color: #dfe2e6; }
+    .wrap { max-width: 60rem; margin: 0 auto; padding: 2.5rem 1rem 3rem; }
+
+    h1, h2 { margin: 0; color: var(--text); font-weight: 600; line-height: 1.2; }
+    h2 { margin-bottom: .5rem; font-size: 1.25rem; }
     p, ol, ul { margin: .5rem 0; }
-    a { color: #8ab4f8; }
-    a:hover, a:focus { color: #b3cdfb; }
-    .lead { margin-top: 0; color: #a6abb3; }
-    .button {
-        display: inline-block;
-        margin: .75rem 0 .25rem;
-        padding: .6rem 1.1rem;
-        border-radius: .4rem;
-        background: #2a3a55;
-        color: #dfe2e6;
-        text-decoration: none;
+    code { color: var(--text); }
+    a { color: var(--cyan); text-underline-offset: .2em; }
+    a:hover, a:focus-visible { color: var(--text); }
+    :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: .25rem; }
+
+    .hero { display: grid; gap: 2rem; align-items: center; }
+    .brand { display: flex; align-items: center; gap: .75rem; font-size: clamp(2.5rem, 9vw, 3.75rem); }
+    .brand img { width: 1.25em; height: 1.25em; flex: none; }
+    .lead { margin: 1rem 0 0; font-size: 1.25rem; line-height: 1.55; color: var(--text); }
+    .hero-art {
+        display: block; width: 100%; max-width: 30rem; height: auto; justify-self: center;
+        background: var(--surface); border: 1px solid var(--border); border-radius: 1.25rem;
     }
-    .button:hover, .button:focus { background: #34476a; color: #fff; }
-    footer { margin-top: 3rem; font-size: .9rem; color: #8b9098; }
+    .button {
+        display: inline-block; margin: 1.5rem 0 .25rem; padding: .7rem 1.4rem;
+        border: 2px solid transparent; border-radius: 999px;
+        background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--gradient) border-box;
+        color: var(--text); font-weight: 600; text-decoration: none;
+    }
+    .button:hover, .button:focus-visible {
+        background: linear-gradient(var(--surface-hi), var(--surface-hi)) padding-box, var(--gradient) border-box;
+        color: var(--text); text-decoration: underline; text-underline-offset: .25em;
+    }
+
+    .cards { display: grid; gap: 1.25rem; margin-top: 2.5rem; }
+    .card { padding: 1.25rem 1.5rem 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; }
+    .card > :last-child { margin-bottom: 0; }
+
+    footer { margin-top: 2.5rem; font-size: .9rem; color: var(--muted); }
+
+    @media (min-width: 46rem) {
+        .hero { grid-template-columns: 1.1fr .9fr; }
+        .cards { grid-template-columns: 1fr 1fr; }
+        .card.wide { grid-column: 1 / -1; }
+    }
 </style>
 </head>
 <body>
-<main>
-    <h1>MyEyes!</h1>
-    <p class="lead">A dark mode for the web, built for eyes that need a break. Pages are dark from the first frame, and everything works from the keyboard.</p>
+<div class="wrap">
+    <header class="hero">
+        <div>
+            <h1 class="brand"><img src="assets/mark.svg" width="64" height="64" alt="">MyEyes!</h1>
+            <p class="lead">A dark mode for the web, built for eyes that need a break. Pages are dark from the first frame, and everything works from the keyboard.</p>
+            <a class="button" href="https://github.com/pointtonull/myeyes/releases/latest">Get the latest release</a>
+        </div>
+        <img class="hero-art" src="assets/hero.webp" width="786" height="588" alt="The MyEyes! mascot, a friendly purple blob wearing glasses, smiling at its laptop.">
+    </header>
 
-    <a class="button" href="https://github.com/pointtonull/myeyes/releases/latest">Get the latest release</a>
+    <main class="cards">
+        <section class="card wide">
+            <h2>Install (Firefox 140 or newer)</h2>
+            <ol>
+                <li>Download the <code>.xpi</code> file from the latest release.</li>
+                <li>In Firefox open <code>about:addons</code>, click the gear and choose <em>Install Add-on From File…</em>.</li>
+            </ol>
+            <p>The file is signed by Mozilla, so it stays installed. From version 0.1.1 on, Firefox updates it by itself.</p>
+        </section>
 
-    <h2>Install (Firefox 140 or newer)</h2>
-    <ol>
-        <li>Download the <code>.xpi</code> file from the latest release.</li>
-        <li>In Firefox open <code>about:addons</code>, click the gear and choose <em>Install Add-on From File…</em>.</li>
-    </ol>
-    <p>The file is signed by Mozilla, so it stays installed. From version 0.1.1 on, Firefox updates it by itself.</p>
+        <section class="card">
+            <h2>Your data</h2>
+            <p>MyEyes! collects nothing: no accounts, no analytics, no telemetry. Read the <a href="https://github.com/pointtonull/myeyes/blob/main/PRIVACY.md">privacy policy</a>.</p>
+        </section>
 
-    <h2>Your data</h2>
-    <p>MyEyes! collects nothing: no accounts, no analytics, no telemetry. Read the <a href="https://github.com/pointtonull/myeyes/blob/main/PRIVACY.md">privacy policy</a>.</p>
-
-    <h2>More</h2>
-    <ul>
-        <li><a href="https://github.com/pointtonull/myeyes#readme">Help and documentation</a></li>
-        <li><a href="https://github.com/pointtonull/myeyes">Source code</a></li>
-        <li><a href="https://github.com/pointtonull/myeyes/issues">Report a problem</a></li>
-    </ul>
+        <section class="card">
+            <h2>More</h2>
+            <ul>
+                <li><a href="https://github.com/pointtonull/myeyes#readme">Help and documentation</a></li>
+                <li><a href="https://github.com/pointtonull/myeyes">Source code</a></li>
+                <li><a href="https://github.com/pointtonull/myeyes/issues">Report a problem</a></li>
+            </ul>
+        </section>
+    </main>
 
     <footer>MyEyes! is a fork of <a href="https://github.com/darkreader/darkreader">Dark Reader</a> (MIT license). It is not affiliated with Dark Reader Ltd.</footer>
-</main>
+</div>
 </body>
 </html>

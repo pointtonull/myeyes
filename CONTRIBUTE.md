@@ -159,9 +159,10 @@ src/inject/osd.ts         the on-screen confirmations (drawn); src/utils/osd-mes
 src/background/extension.ts   keyboard commands & settings plumbing
 src/utils/                pure, tested logic: named-themes, site-enable, image-triage, usercss, glare-metric…
 src/config/               bundled per-site fixes (offline fallback; updated from upstream at runtime)
-tools/                    preview_popup.py, compare_shots.py, sync_locales.py, icon & mascot scripts
+tools/                    preview_popup.py, compare_shots.py, sync_locales.py, icon & mascot scripts, gen_site.py (site images + fonts)
 tests/unit/               Jest tests
 brand/                    logo, UI kit, the design mockups (brand/reference/*) our UI is aiming at
+docs/                     the project site (GitHub Pages, https://www.pointtonull.dev/myeyes/); docs/assets/ is generated: edit tools/gen_site.py, not the files
 ```
 
 The design targets are `brand/reference/popup-mockup.png` and `osd-mockup.png`. When in doubt, the closer to the mockup, the better.
